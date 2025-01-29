@@ -16,6 +16,31 @@ base_vars = {
         'temperature_850':'t'
 }
 
+input_target_repartition = {
+    'input' : ['geopotential_500', 'temperature_850'],
+    'target' : ['2m_temperature', '10m_u_component_of_wind', '10m_v_component_of_wind']
+}
+
+class MeteoDataset(Dataset): 
+
+    def __init__(self, input, target):
+        self.input = input
+        self.target = target
+
+    def __len__(self):
+        """Return the total number of samples."""
+        return len(self.x)
+    
+    def __getitem__(self, idx):
+        """Return one sample of data with its label."""
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+            
+        sample_input = self.input[idx]
+        sample_target = self.target[idx]
+                    
+        return sample_input, sample_target
+
 class ERADataset(Dataset):
     """Custom Dataset for ERA climate data."""
     
@@ -24,7 +49,9 @@ class ERADataset(Dataset):
         root_dir,
         nb_file, 
         years,
-        vars = base_vars):
+        vars = base_vars, 
+        input_target_repartition = input_target_repartition, 
+        train_val_split = None):
 
         super().__init__()
 
@@ -56,6 +83,18 @@ class ERADataset(Dataset):
                     logging.error(f'No file found at year {year}: {e}')
 
             self.data_vars [var] = np.concatenate(data)
+
+        if not train_val_split: # only load for train:
+            input = []
+            for key in input_target_repartition['input']:
+                input.append(torch.from_numpy(self.data_vars[key]))
+            input = torch.stack(input, axis=-1)
+
+            target = []
+            for key in input_target_repartition['target']:
+                target.append(torch.from_numpy(self.data_vars[key]))
+            target = torch.stack(target, axis=-1)
+            self.dataset = Dataset(input, target)
 
                     
 
