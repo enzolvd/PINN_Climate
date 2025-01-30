@@ -13,4 +13,3 @@
     --checkpoint_dir=checkpoints     
     --visual_interval=1     
     --data_dir=./data/era_5_data
-a
