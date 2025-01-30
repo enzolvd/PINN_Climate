@@ -1,0 +1,15 @@
+ python /home/enzolouv/Documents/ENS\ PS\ 2024-2025/cours/projet_IA/PINN_Climate/train.py     
+    --experiment_name=my_climate_run     
+    --wandb_project=climate_pinn     
+    --hidden_dim=32     
+    --initial_re=100.0     
+    --nb_years=2     
+    --train_val_split=0.8     
+    --batch_size=32     
+    --epochs=100     
+    --learning_rate=1e-3     
+    --physics_weight=1.0     
+    --data_weight=1.0     
+    --checkpoint_dir=checkpoints     
+    --visual_interval=1     
+    --data_dir=./data/era_5_data
