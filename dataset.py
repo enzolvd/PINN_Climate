@@ -169,11 +169,10 @@ class ERADataset(Dataset):
         return {
             'input': self.input[idx],  # [32, 64, 2]
             'target': self.target[idx],  # [32, 64, 3]
-            'coords': {
-                'lon': self.lons,  # [32, 64]
-                'lat': self.lats,  # [32, 64]
-                'time': self.time[idx],  # scalar
-            },
+            'coords': [
+                self.lons,  
+                self.lats, 
+                self.time[idx]],
             'masks': self.constant_masks,  # Dictionary of constant masks
             'norm_params': self.norm_params  # Normalization parameters
         }
