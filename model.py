@@ -102,9 +102,7 @@ class ClimatePINN(nn.Module):
         outputs = self.feature_combiner(combined)
         
         predictions = {
-            't2m': outputs[:, 0],
-            'u10': outputs[:, 1],
-            'v10': outputs[:, 2]
+            'output': outputs
         }
 
         if compute_physics:
