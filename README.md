@@ -127,5 +127,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Acknowledgments
 
-- ERA5 data provided by ECMWF
+- [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=overview) data provided by ECMWF
 - Navier-Stokes equations for PINNs: [Physics-informed neural networks for high-resolution weather reconstruction from sparse weather stations](https://open-research-europe.ec.europa.eu/articles/4-99) 
