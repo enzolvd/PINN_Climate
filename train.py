@@ -77,16 +77,19 @@ def plot_comparison(true, pred, title, normalize=True, norm_params=None):
     return fig
 
 def train_pinn(args, model, train_loader, val_loader, device):
-    """Train the PINN model with checkpointing and logging capabilities."""
+    """Train the PINN model with enhanced checkpointing capabilities."""
     # Create checkpoint directory
     os.makedirs(args.checkpoint_dir, exist_ok=True)
-    checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.experiment_name}.pt")
+    
+    # Define checkpoint paths
+    last_checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.experiment_name}.pt")
+    best_checkpoint_path = os.path.join(args.checkpoint_dir, f"best_{args.experiment_name}.pt")
     
     # Initialize variables
     start_epoch = 0
     best_val_loss = float('inf')
     global_step = 0
-    global_batch_idx = 0  # Track global batch index across epochs
+    global_batch_idx = 0
     
     # Initialize wandb first
     api = wandb.Api()
@@ -106,27 +109,23 @@ def train_pinn(args, model, train_loader, val_loader, device):
                 checkpoint_to_load = args.resume
                 checkpoint_exists = True
             else:
-                checkpoint_pattern = os.path.join(args.checkpoint_dir, f"{args.experiment_name}*.pt")
-                checkpoints = sorted(glob.glob(checkpoint_pattern))
-                if checkpoints:
-                    checkpoint_to_load = checkpoints[-1]
+                # Load the last checkpoint, not the best one
+                if os.path.exists(last_checkpoint_path):
+                    checkpoint_to_load = last_checkpoint_path
                     checkpoint_exists = True
             
             if checkpoint_exists:
-                # If we have a checkpoint, we can resume from it
                 print(f"Found checkpoint at {checkpoint_to_load}")
                 checkpoint = torch.load(checkpoint_to_load)
                 model.load_state_dict(checkpoint['model_state_dict'])
                 start_epoch = checkpoint['epoch']
                 best_val_loss = checkpoint['best_val_loss']
                 
-                # Get the last logged step and batch_idx from wandb
                 try:
                     history = existing_run.scan_history()
-                    history_list = list(history)  # Convert to list to scan multiple times
+                    history_list = list(history)
                     
                     if history_list:
-                        # Find the maximum step and corresponding batch index
                         max_step_row = max(history_list, key=lambda x: x.get('_step', 0))
                         global_step = max_step_row.get('_step', 0) + 1
                         global_batch_idx = max_step_row.get('batch/batch_idx', 0) + 1
@@ -137,7 +136,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     global_step = checkpoint.get('global_step', start_epoch * len(train_loader))
                     global_batch_idx = checkpoint.get('global_batch_idx', 0)
                 
-                # Initialize wandb with resume
                 wandb.init(
                     project=args.wandb_project,
                     name=args.experiment_name,
@@ -145,7 +143,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     resume="must"
                 )
             else:
-                # No checkpoint but existing run - start fresh
                 print("No checkpoint found. Starting new run with same name...")
                 existing_run.delete()
                 wandb.init(
@@ -154,7 +151,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     config=vars(args)
                 )
         else:
-            # No existing run - start fresh
             wandb.init(
                 project=args.wandb_project,
                 name=args.experiment_name,
@@ -259,6 +255,17 @@ def train_pinn(args, model, train_loader, val_loader, device):
             'epoch/train_data_loss': avg_data_loss,
             'epoch': epoch + 1
         }
+        
+        # Save checkpoint after every epoch
+        torch.save({
+            'epoch': epoch + 1,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'best_val_loss': best_val_loss,
+            'global_step': global_step,
+            'global_batch_idx': global_batch_idx
+        }, last_checkpoint_path)
+        print(f"Saved regular checkpoint at epoch {epoch + 1}")
         
         # Validation and visualization (if validation set exists)
         if val_loader is not None:
@@ -394,7 +401,7 @@ def train_pinn(args, model, train_loader, val_loader, device):
                 'epoch/val_data_loss': avg_val_data_loss
             })
             
-            # Save checkpoint if validation loss improved
+            # Save best checkpoint if validation loss improved
             if avg_val_total_loss < best_val_loss:
                 best_val_loss = avg_val_total_loss
                 torch.save({
@@ -404,8 +411,8 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     'best_val_loss': best_val_loss,
                     'global_step': global_step,
                     'global_batch_idx': global_batch_idx
-                }, checkpoint_path)
-                print(f"Saved checkpoint at epoch {epoch + 1} with global_step {global_step}")
+                }, best_checkpoint_path)
+                print(f"Saved best checkpoint at epoch {epoch + 1} with val_loss {best_val_loss:.4f}")
         
         # Log epoch metrics
         wandb.log(epoch_metrics, step=global_step)

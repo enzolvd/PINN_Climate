@@ -3,6 +3,9 @@ data/
 wandb/
 checkpoints/
 visualizations/
+test_cron.sh
+testdata.ipynb
+temp_training_script.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
