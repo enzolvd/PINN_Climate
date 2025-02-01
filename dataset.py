@@ -30,7 +30,8 @@ class ERADataset(Dataset):
         years,
         normalize = True,
         vars = base_vars, 
-        input_target_repartition = input_target_repartition):
+        input_target_repartition = input_target_repartition,
+        norm_params = None):  # Add norm_params parameter
 
         super().__init__()
 
@@ -39,8 +40,8 @@ class ERADataset(Dataset):
         self.vars = vars
         self.normalize = normalize
         
-        # Dictionary to store normalization parameters
-        self.norm_params = {}
+        # Use provided norm_params or create new ones
+        self.norm_params = norm_params if norm_params is not None else {}
 
         # Load grid file
         try:
@@ -50,18 +51,19 @@ class ERADataset(Dataset):
             logging.error(f"Error loading constants files: {e}")
 
         # Extract coordinates and ensure float32 precision
-        self.lons = self.grid_ds['lon2d'].to_numpy().astype(np.float32)  # [32, 64]
-        self.lats = self.grid_ds['lat2d'].to_numpy().astype(np.float32)  # [32, 64]
+        self.lons = self.grid_ds['lon2d'].to_numpy().astype(np.float32)
+        self.lats = self.grid_ds['lat2d'].to_numpy().astype(np.float32)
         
-        # Store coordinate normalization parameters
-        self.norm_params['lon'] = {
-            'min': float(self.lons.min()),
-            'max': float(self.lons.max())
-        }
-        self.norm_params['lat'] = {
-            'min': float(self.lats.min()),
-            'max': float(self.lats.max())
-        }
+        # Store coordinate normalization parameters only if not provided
+        if not self.norm_params:
+            self.norm_params['lon'] = {
+                'min': float(self.lons.min()),
+                'max': float(self.lons.max())
+            }
+            self.norm_params['lat'] = {
+                'min': float(self.lats.min()),
+                'max': float(self.lats.max())
+            }
         
         if self.normalize:
             self.lons = ((self.lons - self.norm_params['lon']['min']) / 
@@ -80,18 +82,18 @@ class ERADataset(Dataset):
                 try:
                     file = [f for f in list_file_var if f'_{str(year)}_' in f][0]
                     data_path = self.root_dir / var / file
-                    # Ensure float32 precision when loading data
                     self.data.append(xr.open_dataset(data_path)[key].to_numpy().astype(np.float32))
                 except Exception as e:
                     logging.error(f'No file found at year {year}: {e}')
 
             self.data_vars[var] = np.concatenate(self.data)
             
-            # Store normalization parameters
-            self.norm_params[var] = {
-                'min': float(self.data_vars[var].min()),
-                'max': float(self.data_vars[var].max())
-            }
+            # Store normalization parameters only if not provided
+            if not self.norm_params.get(var):
+                self.norm_params[var] = {
+                    'min': float(self.data_vars[var].min()),
+                    'max': float(self.data_vars[var].max())
+                }
             
             # Normalize if requested and ensure float32 precision
             if self.normalize:
@@ -102,14 +104,15 @@ class ERADataset(Dataset):
         self.constant_masks = {}
         for key in ['orography', 'lsm', 'slt']:
             data = self.grid_ds[key].to_numpy().astype(np.float32)
-            self.norm_params[key] = {
-                'min': float(data.min()),
-                'max': float(data.max())
-            }
+            if not self.norm_params.get(key):
+                self.norm_params[key] = {
+                    'min': float(data.min()),
+                    'max': float(data.max())
+                }
             if self.normalize:
                 data = ((data - self.norm_params[key]['min']) / 
                        (self.norm_params[key]['max'] - self.norm_params[key]['min'])).astype(np.float32)
-            self.constant_masks[key] = torch.from_numpy(data).float()  # Ensure float32 tensor
+            self.constant_masks[key] = torch.from_numpy(data).float()
         self.constant_masks = torch.stack(list(self.constant_masks.values()))
 
         # Load and process time
@@ -123,11 +126,12 @@ class ERADataset(Dataset):
         time = np.concatenate(time)
         self.time = ((time - np.datetime64('1979-01-01')) / np.timedelta64(1, 'h')).astype(np.float32)
         
-        # Store time normalization parameters
-        self.norm_params['time'] = {
-            'min': float(self.time.min()),
-            'max': float(self.time.max())
-        }
+        # Store time normalization parameters only if not provided
+        if not self.norm_params.get('time'):
+            self.norm_params['time'] = {
+                'min': float(self.time.min()),
+                'max': float(self.time.max())
+            }
         
         if self.normalize:
             self.time = ((self.time - self.norm_params['time']['min']) / 
@@ -136,12 +140,12 @@ class ERADataset(Dataset):
         # Prepare input and target tensors
         input_list = []
         for key in input_target_repartition['input']:
-            input_list.append(torch.from_numpy(self.data_vars[key]).float())  # Ensure float32 tensor
+            input_list.append(torch.from_numpy(self.data_vars[key]).float())
         self.input = torch.stack(input_list, dim=-1).permute(0, 3, 1, 2)
 
         target_list = []
         for key in input_target_repartition['target']:
-            target_list.append(torch.from_numpy(self.data_vars[key]).float())  # Ensure float32 tensor
+            target_list.append(torch.from_numpy(self.data_vars[key]).float())
         self.target = torch.stack(target_list, dim=-1).permute(0, 3, 1, 2)
         
         # Convert coordinates to torch tensors in float32
@@ -198,7 +202,16 @@ def load_dataset(
         nb_val = nb_file - nb_train
         years_train = np.arange(year0, year0 + nb_train, 1, dtype=np.int32)
         years_val = np.arange(year0 + nb_train, year0 + nb_train + nb_val, dtype=np.int32)
+        
+        # First create training dataset to get normalization parameters
         datasets['train'] = ERADataset(root_dir=root_dir, years=years_train, normalize=normalize)
-        datasets['val'] = ERADataset(root_dir=root_dir, years=years_val, normalize=normalize)
+        
+        # Create validation dataset using training normalization parameters
+        datasets['val'] = ERADataset(
+            root_dir=root_dir, 
+            years=years_val, 
+            normalize=normalize,
+            norm_params=datasets['train'].get_norm_params()  # Pass training normalization parameters
+        )
 
     return datasets

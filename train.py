@@ -10,14 +10,51 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from PIL import Image
 import numpy as np
+import importlib.util
+from pathlib import Path
 
-from model import ClimatePINN
 from dataset import load_dataset
+
+def get_available_models():
+    """Get list of available models from the models directory."""
+    models_dir = Path("./models")
+    return [model.stem for model in models_dir.glob("model_*.py")]
+
+def load_model(model_name):
+    """Dynamically import and load a model from the models directory."""
+    model_path = Path("./models") / f"{model_name}.py"
+    
+    if not model_path.exists():
+        raise ValueError(f"Model file {model_path} does not exist")
+    
+    spec = importlib.util.spec_from_file_location(model_name, model_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    
+    # Get the model class - assuming it's the only class defined in the file
+    model_class = None
+    for attr_name in dir(module):
+        attr = getattr(module, attr_name)
+        if isinstance(attr, type) and issubclass(attr, torch.nn.Module) and attr != torch.nn.Module:
+            model_class = attr
+            break
+    
+    if model_class is None:
+        raise ValueError(f"No torch.nn.Module subclass found in {model_name}.py")
+    
+    return model_class
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Training PINN for climate modeling with physics constraints.")
     
-    # Model parameters
+    # Get available models
+    available_models = get_available_models()
+    if not available_models:
+        raise ValueError("No model files found in ./models directory. Models should be named model_*.py")
+    
+    # Model selection and parameters
+    parser.add_argument("--model", type=str, choices=available_models, required=True,
+                       help=f"Name of the model file to use (without .py). Available models: {', '.join(available_models)}")
     parser.add_argument("--hidden_dim", type=int, default=64, help="Hidden dimension for the model")
     parser.add_argument("--initial_re", type=float, default=100.0, help="Initial Reynolds number")
     
@@ -38,6 +75,7 @@ def parse_arguments():
     parser.add_argument("--experiment_name", type=str, default="climate_pinn", help="Name of the experiment")
     parser.add_argument("--wandb_project", type=str, default="climate_pinn", help="WandB project name")
     parser.add_argument("--visual_interval", type=int, default=1, help="Epoch interval for visualization")
+    parser.add_argument("--use_progress_bar", action="store_true", help="Use tqdm progress bar for training")
     
     # Data paths
     parser.add_argument("--data_dir", type=str, default="./data/era_5_data", help="Path to ERA5 data")
@@ -78,12 +116,13 @@ def plot_comparison(true, pred, title, normalize=True, norm_params=None):
 
 def train_pinn(args, model, train_loader, val_loader, device):
     """Train the PINN model with enhanced checkpointing capabilities."""
-    # Create checkpoint directory
-    os.makedirs(args.checkpoint_dir, exist_ok=True)
+    # Create checkpoint directory with model name subfolder
+    checkpoint_dir = Path(args.checkpoint_dir) / args.model
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
     
-    # Define checkpoint paths
-    last_checkpoint_path = os.path.join(args.checkpoint_dir, f"{args.experiment_name}.pt")
-    best_checkpoint_path = os.path.join(args.checkpoint_dir, f"best_{args.experiment_name}.pt")
+    # Define checkpoint paths with model name included
+    last_checkpoint_path = checkpoint_dir / f"{args.experiment_name}_last.pt"
+    best_checkpoint_path = checkpoint_dir / f"{args.experiment_name}_best.pt"
     
     # Initialize variables
     start_epoch = 0
@@ -103,20 +142,40 @@ def train_pinn(args, model, train_loader, val_loader, device):
             print(f"\nFound existing experiment: {args.experiment_name}")
             existing_run = sorted(runs, key=lambda x: x.created_at)[-1]
             
-            # Check if there's a checkpoint for this run
+            # Get the configuration of the existing run
+            existing_config = existing_run.config
+            current_config = vars(args)
+            
+            # Compare configurations (excluding certain keys that can differ)
+            exclude_keys = {'resume', 'checkpoint_dir', 'use_progress_bar'}
+            config_mismatch = False
+            
+            for key in current_config:
+                if key not in exclude_keys and key in existing_config:
+                    if str(current_config[key]) != str(existing_config[key]):
+                        print(f"Parameter mismatch for {key}: current={current_config[key]}, existing={existing_config[key]}")
+                        config_mismatch = True
+            
+            if config_mismatch:
+                raise ValueError(f"Experiment '{args.experiment_name}' exists with different parameters. Please use a different name.")
+            
+            # Check for checkpoint
             checkpoint_exists = False
             if args.resume and os.path.exists(args.resume):
                 checkpoint_to_load = args.resume
                 checkpoint_exists = True
-            else:
-                # Load the last checkpoint, not the best one
-                if os.path.exists(last_checkpoint_path):
-                    checkpoint_to_load = last_checkpoint_path
-                    checkpoint_exists = True
+            elif os.path.exists(last_checkpoint_path):
+                checkpoint_to_load = last_checkpoint_path
+                checkpoint_exists = True
             
             if checkpoint_exists:
                 print(f"Found checkpoint at {checkpoint_to_load}")
                 checkpoint = torch.load(checkpoint_to_load)
+                
+                # Verify model name matches
+                if checkpoint.get('model') != args.model:
+                    raise ValueError(f"Checkpoint model ({checkpoint.get('model')}) doesn't match requested model ({args.model})")
+                
                 model.load_state_dict(checkpoint['model_state_dict'])
                 start_epoch = checkpoint['epoch']
                 best_val_loss = checkpoint['best_val_loss']
@@ -129,13 +188,12 @@ def train_pinn(args, model, train_loader, val_loader, device):
                         max_step_row = max(history_list, key=lambda x: x.get('_step', 0))
                         global_step = max_step_row.get('_step', 0) + 1
                         global_batch_idx = max_step_row.get('batch/batch_idx', 0) + 1
-                        
-                        print(f"Resuming from epoch {start_epoch} with global_step {global_step} and batch_idx {global_batch_idx}")
                 except Exception as e:
                     print(f"Error retrieving wandb history: {e}")
                     global_step = checkpoint.get('global_step', start_epoch * len(train_loader))
                     global_batch_idx = checkpoint.get('global_batch_idx', 0)
                 
+                print(f"Resuming from epoch {start_epoch}")
                 wandb.init(
                     project=args.wandb_project,
                     name=args.experiment_name,
@@ -144,7 +202,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                 )
             else:
                 print("No checkpoint found. Starting new run with same name...")
-                existing_run.delete()
                 wandb.init(
                     project=args.wandb_project,
                     name=args.experiment_name,
@@ -157,6 +214,8 @@ def train_pinn(args, model, train_loader, val_loader, device):
                 config=vars(args)
             )
     except Exception as e:
+        if "different parameters" in str(e):
+            raise
         print(f"Error checking for existing experiment: {e}")
         wandb.init(
             project=args.wandb_project,
@@ -178,16 +237,10 @@ def train_pinn(args, model, train_loader, val_loader, device):
         
         # Create batches iterator
         batch_iterator = enumerate(train_loader)
+        if args.use_progress_bar:
+            batch_iterator = tqdm(batch_iterator, desc=f"Epoch {epoch+1}/{args.epochs}", total=len(train_loader))
         
-        # Skip batches if resuming from middle of epoch
-        if epoch == start_epoch and global_batch_idx % len(train_loader) > 0:
-            batches_to_skip = global_batch_idx % len(train_loader)
-            print(f"Skipping to batch {batches_to_skip}")
-            for _ in range(batches_to_skip):
-                next(batch_iterator)
-        
-        pbar = tqdm(batch_iterator, desc=f"Epoch {epoch+1}/{args.epochs}", total=len(train_loader))
-        for batch_idx, batch in pbar:
+        for batch_idx, batch in batch_iterator:
             optimizer.zero_grad()
             
             # Move data to device
@@ -217,12 +270,13 @@ def train_pinn(args, model, train_loader, val_loader, device):
             physics_loss_total += physics_loss.item()
             data_loss_total += data_loss.item()
             
-            # Update progress bar
-            pbar.set_postfix({
-                'total_loss': total_loss.item(),
-                'physics_loss': physics_loss.item(),
-                'data_loss': data_loss.item()
-            })
+            # Update progress bar if enabled
+            if args.use_progress_bar:
+                batch_iterator.set_postfix({
+                    'total_loss': total_loss.item(),
+                    'physics_loss': physics_loss.item(),
+                    'data_loss': data_loss.item()
+                })
             
             # Log batch metrics
             batch_metrics = {
@@ -248,6 +302,10 @@ def train_pinn(args, model, train_loader, val_loader, device):
         avg_physics_loss = physics_loss_total / len(train_loader)
         avg_data_loss = data_loss_total / len(train_loader)
         
+        # Print epoch summary if progress bar is disabled
+        if not args.use_progress_bar:
+            print(f"Epoch {epoch+1}/{args.epochs} - train_loss: {avg_train_loss:.4f}, physics_loss: {avg_physics_loss:.4f}, data_loss: {avg_data_loss:.4f}")
+        
         # Initialize epoch metrics dictionary
         epoch_metrics = {
             'epoch/train_loss': avg_train_loss,
@@ -257,15 +315,19 @@ def train_pinn(args, model, train_loader, val_loader, device):
         }
         
         # Save checkpoint after every epoch
-        torch.save({
+        checkpoint_dict = {
             'epoch': epoch + 1,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'best_val_loss': best_val_loss,
             'global_step': global_step,
-            'global_batch_idx': global_batch_idx
-        }, last_checkpoint_path)
-        print(f"Saved regular checkpoint at epoch {epoch + 1}")
+            'global_batch_idx': global_batch_idx,
+            'model': args.model
+        }
+        
+        torch.save(checkpoint_dict, last_checkpoint_path)
+        if not args.use_progress_bar:
+            print(f"Saved regular checkpoint at epoch {epoch + 1}")
         
         # Validation and visualization (if validation set exists)
         if val_loader is not None:
@@ -284,7 +346,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                 
                 try:
                     with torch.set_grad_enabled(True):
-                        # Clear memory and gradients
                         if torch.cuda.is_available():
                             torch.cuda.empty_cache()
                         optimizer.zero_grad()
@@ -306,7 +367,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                             epoch_metrics[f"visualization/{var}"] = fig_to_wandb_image(fig)
                             plt.close(fig)
                         
-                        # Clear memory
                         del val_predictions, val_outputs
                         torch.cuda.empty_cache()
                 except RuntimeError as e:
@@ -314,7 +374,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                         print("WARNING: Out of memory in visualization. Trying without physics computation")
                         if torch.cuda.is_available():
                             torch.cuda.empty_cache()
-                        # Try again without physics computation
                         val_predictions = model(val_inputs, val_masks, val_coords, compute_physics=False)
                         val_outputs = val_predictions['output']
                         
@@ -331,14 +390,12 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     else:
                         raise e
                 
-                # Clear visualization data
                 del val_inputs, val_targets, val_masks, val_coords
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
             
             # Calculate validation loss for all batches
             for val_batch in val_loader:
-                # Clear memory before each batch
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
                 
@@ -349,25 +406,19 @@ def train_pinn(args, model, train_loader, val_loader, device):
                 
                 try:
                     with torch.set_grad_enabled(True):
-                        # Clear gradients
                         optimizer.zero_grad()
-                        
-                        # Forward pass with physics computation
                         predictions = model(inputs, masks, coords, compute_physics=True)
                         outputs = predictions['output']
                         physics_losses = predictions['physics_loss']
                         
-                        # Calculate losses
                         data_loss = model.MSE(outputs, targets)
                         physics_loss = sum(physics_losses.values())
                         total_loss = args.data_weight * data_loss + args.physics_weight * physics_loss
                         
-                        # Accumulate losses
                         val_total_loss += total_loss.item()
                         val_physics_loss += physics_loss.item()
                         val_data_loss += data_loss.item()
                         
-                        # Clear intermediate results
                         del predictions, outputs, physics_losses
                         torch.cuda.empty_cache()
                 except RuntimeError as e:
@@ -375,7 +426,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                         print("WARNING: Out of memory in validation. Clearing cache and trying with compute_physics=False")
                         if torch.cuda.is_available():
                             torch.cuda.empty_cache()
-                        # Try again without physics computation
                         predictions = model(inputs, masks, coords, compute_physics=False)
                         outputs = predictions['output']
                         data_loss = model.MSE(outputs, targets)
@@ -384,7 +434,6 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     else:
                         raise e
                 
-                # Clear batch data
                 del inputs, targets, masks, coords
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
@@ -404,15 +453,10 @@ def train_pinn(args, model, train_loader, val_loader, device):
             # Save best checkpoint if validation loss improved
             if avg_val_total_loss < best_val_loss:
                 best_val_loss = avg_val_total_loss
-                torch.save({
-                    'epoch': epoch + 1,
-                    'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                    'best_val_loss': best_val_loss,
-                    'global_step': global_step,
-                    'global_batch_idx': global_batch_idx
-                }, best_checkpoint_path)
-                print(f"Saved best checkpoint at epoch {epoch + 1} with val_loss {best_val_loss:.4f}")
+                checkpoint_dict['best_val_loss'] = best_val_loss
+                torch.save(checkpoint_dict, best_checkpoint_path)
+                if not args.use_progress_bar:
+                    print(f"Saved best checkpoint at epoch {epoch + 1} with val_loss {best_val_loss:.4f}")
         
         # Log epoch metrics
         wandb.log(epoch_metrics, step=global_step)
@@ -459,8 +503,9 @@ def main():
         print(f"Loaded {len(datasets['train'])} training samples (no validation split)")
     
     # Initialize model
-    print("Initializing model...")
-    model = ClimatePINN(
+    print(f"Initializing model from {args.model}.py")
+    model_class = load_model(args.model)
+    model = model_class(
         hidden_dim=args.hidden_dim,
         initial_re=args.initial_re,
         device=device

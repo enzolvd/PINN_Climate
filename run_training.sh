@@ -166,8 +166,9 @@ eval "\$(/home/ensta/ensta-louvard/miniconda3/bin/conda shell.bash hook)"
 # Activate the environment
 conda activate projet_IA
 
-# Run the training with minimal logging
-PYTHONPATH=\$PYTHONPATH:. TQDM_DISABLE=1 python train.py \\
+# Run the training
+PYTHONPATH=\$PYTHONPATH:. python train.py \\
+    --model=model_0 \\
     --experiment_name=run_2 \\
     --wandb_project=climate_pinn \\
     --hidden_dim=64 \\
@@ -181,7 +182,8 @@ PYTHONPATH=\$PYTHONPATH:. TQDM_DISABLE=1 python train.py \\
     --data_weight=1.0 \\
     --checkpoint_dir=checkpoints \\
     --visual_interval=1 \\
-    --data_dir=./data/era_5_data 2>&1 | grep -v "^Epoch"
+    --use_progress_bar \\
+    --data_dir=./data/era_5_data
 
 # Capture the exit code
 training_exit_code=\$?

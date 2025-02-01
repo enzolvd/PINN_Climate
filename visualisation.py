@@ -6,7 +6,7 @@ from matplotlib.animation import FuncAnimation, FFMpegWriter, PillowWriter
 import matplotlib.animation as animation
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from model import ClimatePINN
+from models.model_0 import ClimatePINN
 from dataset import load_dataset
 import os
 from torch.utils.data import DataLoader
