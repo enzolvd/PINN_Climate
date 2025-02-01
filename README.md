@@ -120,11 +120,6 @@ The training process is tracked using Weights & Biases, logging:
 - Prediction visualizations
 - Model checkpoints
 
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## Acknowledgments
 
 - [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=overview) data provided by ECMWF
