@@ -44,6 +44,18 @@ def load_model(model_name):
     
     return model_class
 
+def compare_values(val1, val2):
+    """Compare two values, handling different numeric formats."""
+    try:
+        # Try to convert both to float for numeric comparison
+        num1 = float(str(val1).rstrip('.0'))
+        num2 = float(str(val2).rstrip('.0'))
+        # Use approximate equality for floats
+        return abs(num1 - num2) < 1e-10
+    except (ValueError, TypeError):
+        # For non-numeric values, compare strings
+        return str(val1) == str(val2)
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Training PINN for climate modeling with physics constraints.")
     
@@ -152,14 +164,14 @@ def train_pinn(args, model, train_loader, val_loader, device):
             
             for key in current_config:
                 if key not in exclude_keys and key in existing_config:
-                    if str(current_config[key]) != str(existing_config[key]):
+                    if not compare_values(current_config[key], existing_config[key]):
                         print(f"Parameter mismatch for {key}: current={current_config[key]}, existing={existing_config[key]}")
                         config_mismatch = True
             
             if config_mismatch:
                 raise ValueError(f"Experiment '{args.experiment_name}' exists with different parameters. Please use a different name.")
             
-            # Check for checkpoint
+            # Check if there's a checkpoint for this run
             checkpoint_exists = False
             if args.resume and os.path.exists(args.resume):
                 checkpoint_to_load = args.resume
@@ -201,7 +213,8 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     resume="must"
                 )
             else:
-                print("No checkpoint found. Starting new run with same name...")
+                print("No checkpoint found. Deleting existing wandb run and starting fresh...")
+                existing_run.delete()
                 wandb.init(
                     project=args.wandb_project,
                     name=args.experiment_name,
@@ -228,7 +241,7 @@ def train_pinn(args, model, train_loader, val_loader, device):
     if 'checkpoint' in locals() and 'optimizer_state_dict' in checkpoint:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
-    # Training loop
+# Training loop
     for epoch in range(start_epoch, args.epochs):
         model.train()
         train_loss = 0.0
@@ -278,14 +291,38 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     'data_loss': data_loss.item()
                 })
             
-            # Log batch metrics
+            # Calculate progress percentage
+            progress = (batch_idx + 1) / len(train_loader) * 100
+
+            # Create progress bar HTML
+            progress_bar_html = f"""
+            <div style="border: 1px solid #ccc; width: 300px; height: 20px; background-color: #f0f0f0;">
+                <div style="background-color: #4CAF50; width: {progress}%; height: 100%;"></div>
+            </div>
+            <div style="text-align: center; font-family: monospace; margin-top: 5px;">
+                Epoch Progress: {progress:.1f}% ({batch_idx + 1}/{len(train_loader)})
+            </div>
+            """
+
+            # Create status text HTML
+            status_html = f"""
+            <div style="font-family: monospace; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                <div><b>Training Status:</b></div>
+                <div>• Epoch: {epoch + 1}/{args.epochs}</div>
+                <div>• Batch: {batch_idx + 1}/{len(train_loader)}</div>
+                <div>• Global Step: {global_step}</div>
+                <div>• Latest Loss: {total_loss.item():.4f}</div>
+            </div>
+            """
+
+            # Log metrics including HTML elements
             batch_metrics = {
                 'batch/total_loss': total_loss.item(),
                 'batch/physics_loss': physics_loss.item(),
                 'batch/data_loss': data_loss.item(),
                 'batch/reynolds_number': model.get_reynolds_number().item(),
-                'batch/epoch': epoch + 1,
-                'batch/batch_idx': global_batch_idx
+                'status': wandb.Html(status_html),
+                'progress': wandb.Html(progress_bar_html)
             }
             
             wandb.log(batch_metrics, step=global_step)
@@ -459,7 +496,7 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     print(f"Saved best checkpoint at epoch {epoch + 1} with val_loss {best_val_loss:.4f}")
         
         # Log epoch metrics
-        wandb.log(epoch_metrics, step=global_step)
+        wandb.log(epoch_metrics, step=global_batch_idx)
         global_step += 1
     
     wandb.finish()
