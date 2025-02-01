@@ -496,7 +496,7 @@ def train_pinn(args, model, train_loader, val_loader, device):
                     print(f"Saved best checkpoint at epoch {epoch + 1} with val_loss {best_val_loss:.4f}")
         
         # Log epoch metrics
-        wandb.log(epoch_metrics, step=global_batch_idx)
+        wandb.log(epoch_metrics, step=global_step)
         global_step += 1
     
     wandb.finish()
