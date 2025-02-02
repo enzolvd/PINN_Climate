@@ -40,7 +40,6 @@ class ExperimentQueue:
         # First check if there's a current experiment
         if self.current_file.exists():
             current = self._load_json(self.current_file)
-            print("Found current experiment, continuing with it")
             return current
             
         # If no current experiment, get next from queue
@@ -99,6 +98,7 @@ def main():
     elif args.action == "get_next":
         next_exp = queue.get_next_experiment()
         if next_exp:
+            # Only print the JSON data, no additional messages
             print(json.dumps(next_exp))
     
     elif args.action == "mark_completed":

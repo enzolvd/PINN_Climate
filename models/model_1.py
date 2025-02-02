@@ -1,41 +1,14 @@
 import torch
 import torch.nn as nn
-
-class ResBlock(torch.nn.Module):
-    """Define a Res connection block for encoder decoder"""
-    def __init__(self, in_channel):        
-        super().__init__()
-        
-        self.conv_block = nn.Sequential(
-                    nn.Conv2d(in_channels = in_channel,
-                            out_channels = in_channel,
-                            kernel_size=3,
-                            stride=1,
-                            padding='same'),
-                    # nn.BatchNorm2d(in_channel),
-                    nn.ReLU(),
-                    nn.Conv2d(in_channels = in_channel,
-                            out_channels = in_channel,
-                            kernel_size=3,
-                            stride=1,
-                            padding='same'),
-                    # nn.BatchNorm2d(in_channel)                         
-        )
-        self.act = nn.ReLU()
-
-    def forward(self, input):
-        out = self.conv_block(input)
-        out += input 
-        out = self.act(out)
-        return out
-
+  
 class MeteoEncoder(nn.Module):
     def __init__(self, in_channels=2, hidden_dim=64):
         super().__init__()
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels, hidden_dim, kernel_size=3, padding=1),
             nn.Tanh(),
-            ResBlock(hidden_dim),
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+            nn.Tanh(),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
             nn.Tanh(),
             nn.Dropout(p=0.2)
@@ -50,7 +23,6 @@ class MaskEncoder(nn.Module):
         self.cnn = nn.Sequential(
             nn.Conv2d(n_masks, hidden_dim, kernel_size=3, padding=1),
             nn.Tanh(),
-            ResBlock(hidden_dim),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
             nn.Tanh(),
             nn.Dropout(p=0.2)
@@ -67,7 +39,7 @@ class CoordProcessor(nn.Module):
             nn.Tanh(),
             nn.Linear(hidden_dim, hidden_dim),
             nn.Tanh(),
-            nn.Dropout(p=0.5)
+            nn.Dropout(p=0.2)
         )
     
     def forward(self, x, y, t):
@@ -89,13 +61,14 @@ class ClimatePINN(nn.Module):
         self.feature_combiner = nn.Sequential(
             nn.Conv2d(hidden_dim * 3, hidden_dim * 2, kernel_size=3, padding=1),
             nn.Tanh(),
-            ResBlock(hidden_dim * 2),
+            nn.Conv2d(hidden_dim * 2, hidden_dim * 2, kernel_size=3, padding=1),
+            nn.Tanh(),
             nn.Conv2d(hidden_dim * 2, 3, kernel_size=3, padding=1),
             nn.Dropout(p=0.2)
         )
         
         # Learnable Reynolds number parameter
-        self.log_re = nn.Parameter(torch.tensor(initial_re, device=device))
+        self.log_re = nn.Parameter(torch.log(torch.tensor(initial_re, device=device)))
         
         # Loss function
         self.MSE = nn.MSELoss()
@@ -105,7 +78,8 @@ class ClimatePINN(nn.Module):
     
     def get_reynolds_number(self):
         # Return Reynolds number in a differentiable way
-        return self.log_re
+        # Using exp ensures Re stays positive
+        return torch.exp(self.log_re)
     
     def forward(self, meteo_inputs, masks, coords, compute_physics=True):     
         # Get original coordinates
