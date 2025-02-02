@@ -36,7 +36,14 @@ class ExperimentQueue:
         print(f"Added {len(experiments)} experiments to queue")
 
     def get_next_experiment(self) -> Dict:
-        """Get the next experiment from the queue and mark it as current."""
+        """Get the next experiment from the queue."""
+        # First check if there's a current experiment
+        if self.current_file.exists():
+            current = self._load_json(self.current_file)
+            print("Found current experiment, continuing with it")
+            return current
+            
+        # If no current experiment, get next from queue
         queue = self._load_json(self.queue_file)
         if not queue:
             return None

@@ -14,11 +14,6 @@ get_next_experiment() {
     python $QUEUE_MANAGER --action get_next
 }
 
-# Function to mark current experiment as completed
-mark_experiment_completed() {
-    python $QUEUE_MANAGER --action mark_completed
-}
-
 # Function to check if a partition is available
 check_partition() {
     local partition=$1
@@ -36,20 +31,15 @@ check_partition() {
     fi
 }
 
-# Function to handle existing jobs
-handle_existing_jobs() {
-    echo "Handling existing jobs..." >> "$LOG_FILE"
-    local jobs=$(squeue -u ensta-louvard -h -o "%i")
-    if [ -n "$jobs" ]; then
-        echo "Cancelling existing jobs..." >> "$LOG_FILE"
-        scancel -u ensta-louvard
-        sleep 10
-    fi
-}
-
 # Main execution
 {
     echo "=== Starting queue processing at $(date) ==="
+    
+    # Check if there's already a job running
+    if [ $(squeue -u ensta-louvard -h | wc -l) -gt 0 ]; then
+        echo "Job already running. Exiting."
+        exit 0
+    fi
     
     # Get next experiment from queue
     EXPERIMENT=$(get_next_experiment)
@@ -62,9 +52,6 @@ handle_existing_jobs() {
     fi
     
     echo "Starting experiment: $EXPERIMENT"
-    
-    # Handle any existing jobs
-    handle_existing_jobs
     
     # Change to working directory
     cd $WORK_DIR
@@ -81,25 +68,44 @@ handle_existing_jobs() {
         fi
     fi
     
-    # Create the training script from experiment parameters
-    echo "Creating training script..."
+    # Create the training script
     cat << EOF > temp_training_script.sh
 #!/bin/bash
 
-eval "\$(/home/ensta/ensta-louvard/miniconda3/bin/conda shell.bash hook)"
+# Change to work directory
+cd $WORK_DIR
+
+# Initialize conda properly
+export CONDA_ROOT=/home/ensta/ensta-louvard/miniconda3
+source \$CONDA_ROOT/etc/profile.d/conda.sh
 conda activate projet_IA
 
-PYTHONPATH=\$PYTHONPATH:. python train.py \\
-$(echo "$EXPERIMENT" | python -c "import sys, json; params = json.load(sys.stdin); print('\n'.join(['    --{}={} \\'.format(k,v) for k,v in params.items()]))")
-    --checkpoint_dir=checkpoints \\
-    --visual_interval=1 \\
-    --use_progress_bar
+# Build command from experiment parameters
+CMD=\$(echo '$EXPERIMENT' | python3 -c '
+import json
+import sys
+params = json.loads(sys.stdin.read())
+cmd_parts = []
+for k, v in params.items():
+    if isinstance(v, bool) and v:
+        cmd_parts.append(f"--{k}")
+    else:
+        cmd_parts.append(f"--{k}={v}")
+print(" ".join(cmd_parts))
+')
+
+# Add fixed parameters
+CMD="\$CMD --checkpoint_dir=checkpoints --visual_interval=1 --use_progress_bar"
+
+echo "Running command: python train.py \$CMD"
+PYTHONPATH=\$PYTHONPATH:. python train.py \$CMD
 
 # Capture exit code
 training_exit_code=\$?
 
 if [ \$training_exit_code -eq 0 ]; then
     echo "Training completed successfully!"
+    $QUEUE_MANAGER --action mark_completed
 fi
 
 exit \$training_exit_code
@@ -107,33 +113,9 @@ EOF
 
     chmod +x temp_training_script.sh
     
-    # Submit the job and get the job ID
+    # Submit the job
     echo "Submitting job to partition: $PARTITION"
-    JOB_ID=$(sbatch --parsable --time=03:55:00 --partition=$PARTITION --gpus=1 ./temp_training_script.sh)
-    
-    # Submit a dependent job that will process the next experiment
-    if [ -n "$JOB_ID" ]; then
-        echo "Submitted job $JOB_ID"
-        
-        # Create a completion handler script
-        cat << 'EOH' > completion_handler.sh
-#!/bin/bash
-if [ "$SLURM_JOB_ID" ]; then
-    # Mark the current experiment as completed
-    python $QUEUE_MANAGER --action mark_completed
-    
-    # Submit the next job from the queue
-    $WORK_DIR/run_queue.sh
-fi
-EOH
-        chmod +x completion_handler.sh
-        
-        # Submit the completion handler as a dependent job
-        HANDLER_ID=$(sbatch --parsable --dependency=afterany:$JOB_ID completion_handler.sh)
-        echo "Submitted completion handler job $HANDLER_ID"
-    else
-        echo "Failed to submit job!"
-    fi
+    srun --partition=$PARTITION --time=03:55:00 --gpus=1 ./temp_training_script.sh
     
     # Cleanup
     rm -f temp_training_script.sh
