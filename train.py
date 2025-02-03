@@ -276,6 +276,7 @@ def train_pinn(args, model, train_loader, val_loader, device):
             
             # Backward pass
             total_loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
             # Update metrics
