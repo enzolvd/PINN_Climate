@@ -9,6 +9,8 @@ temp_training_script.sh
 completion_handler.sh
 *.out
 experiment_queue/
+experiment_.json
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
