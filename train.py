@@ -272,12 +272,12 @@ def train_pinn(args, model, train_loader, val_loader, device):
             physics_loss = sum(physics_losses.values())
 
             # Reg
-            l2_loss = 0
-            for param in model.parameters():
-                l2_loss += torch.norm(param, p=2)
+            # l2_loss = 0
+            # for param in model.parameters():
+            #     l2_loss += torch.norm(param, p=2)
             
             # Combine losses
-            total_loss = args.data_weight * data_loss + args.physics_weight * physics_loss + 0.01*l2_loss
+            total_loss = args.data_weight * data_loss + args.physics_weight * physics_loss #+ 0.01*l2_loss
             
             # Backward pass
             total_loss.backward()
