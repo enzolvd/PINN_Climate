@@ -1,34 +1,6 @@
 import torch
 import torch.nn as nn
-
-class ResBlock(torch.nn.Module):
-    """Define a Res connection block for encoder decoder"""
-    def __init__(self, in_channel):        
-        super().__init__()
-        
-        self.conv_block = torch.nn.Sequential(
-                    torch.nn.Conv2d(in_channels = in_channel,
-                            out_channels = in_channel,
-                            kernel_size=3,
-                            stride=1,
-                            padding='same'),
-                    torch.nn.BatchNorm2d(in_channel),
-                    torch.nn.ReLU(),
-                    torch.nn.Conv2d(in_channels = in_channel,
-                            out_channels = in_channel,
-                            kernel_size=3,
-                            stride=1,
-                            padding='same'),
-                    torch.nn.BatchNorm2d(in_channel)                         
-        )
-        self.act = torch.nn.ReLU()
-
-    def forward(self, input):
-        out = self.conv_block(input)
-        out += input 
-        out = self.act(out)
-        return out
-    
+  
 class MeteoEncoder(nn.Module):
     def __init__(self, in_channels=2, hidden_dim=64):
         super().__init__()
@@ -36,11 +8,12 @@ class MeteoEncoder(nn.Module):
             nn.Conv2d(in_channels, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
             nn.Tanh(),
-            ResBlock(hidden_dim),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
             nn.Tanh(),
-            nn.Dropout(p=0.2)
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+            nn.BatchNorm2d(hidden_dim),
+            nn.Tanh()
         )
     
     def forward(self, x):
@@ -53,7 +26,6 @@ class MaskEncoder(nn.Module):
             nn.Conv2d(n_masks, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
             nn.Tanh(),
-            ResBlock(hidden_dim),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
             nn.Tanh()
@@ -67,8 +39,10 @@ class CoordProcessor(nn.Module):
         super().__init__()
         self.coord_net = nn.Sequential(
             nn.Linear(3, hidden_dim),
+            # nn.BatchNorm2d(hidden_dim),
             nn.Tanh(),
             nn.Linear(hidden_dim, hidden_dim),
+            # nn.BatchNorm2d(hidden_dim),
             nn.Tanh()
         )
     
@@ -92,27 +66,29 @@ class ClimatePINN(nn.Module):
             nn.Conv2d(hidden_dim * 3, hidden_dim * 2, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim*2),
             nn.Tanh(),
-            ResBlock(hidden_dim*2),
-            nn.Conv2d(hidden_dim * 2, 3, kernel_size=3, padding=1),
-            nn.Dropout(p=0.2)
+            nn.Conv2d(hidden_dim * 2, hidden_dim * 2, kernel_size=3, padding=1),
+            nn.BatchNorm2d(hidden_dim*2),
+            nn.Tanh(),
+            nn.Conv2d(hidden_dim * 2, 3, kernel_size=3, padding=1)
         )
         
         # Learnable Reynolds number parameter
-        self.log_re = nn.Parameter(torch.log(torch.tensor(initial_re, device=device)))
+        self.re = nn.Parameter(torch.tensor(initial_re, device=device))
         
         # Loss function
         self.MSE = nn.MSELoss()
         
         # Move model to device
         self.to(device)
+        
         self.re_momentum = 0.7
         self.previous_re = None
 
     def get_reynolds_number(self):
-        clamped_log_re = torch.clamp(self.log_re, 
-                                    min=torch.log(torch.tensor(50.0, device=self.device)), 
-                                    max=torch.log(torch.tensor(1e5, device=self.device)))
-        current_re = torch.exp(clamped_log_re)
+        clamped_re = torch.clamp(self.re, 
+                                    min=torch.tensor(50.0, device=self.device), 
+                                    max=torch.tensor(1e5, device=self.device))
+        current_re = clamped_re
         
         if self.previous_re is None:
             self.previous_re = current_re
