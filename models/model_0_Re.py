@@ -39,10 +39,10 @@ class CoordProcessor(nn.Module):
         super().__init__()
         self.coord_net = nn.Sequential(
             nn.Linear(3, hidden_dim),
-            nn.BatchNorm2d(hidden_dim),
+            # nn.BatchNorm2d(hidden_dim),
             nn.Tanh(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.BatchNorm2d(hidden_dim),
+            # nn.BatchNorm2d(hidden_dim),
             nn.Tanh()
         )
     
