@@ -6,10 +6,13 @@ class MeteoEncoder(nn.Module):
         super().__init__()
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels, hidden_dim, kernel_size=3, padding=1),
+            nn.Batchnorm(),
             nn.Tanh(),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+            nn.Batchnorm(),
             nn.Tanh(),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+            nn.Batchnorm(),
             nn.Tanh()
         )
     
@@ -21,8 +24,10 @@ class MaskEncoder(nn.Module):
         super().__init__()
         self.cnn = nn.Sequential(
             nn.Conv2d(n_masks, hidden_dim, kernel_size=3, padding=1),
+            nn.Batchnorm(),
             nn.Tanh(),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+            nn.Batchnorm(),
             nn.Tanh()
         )
     
@@ -34,8 +39,10 @@ class CoordProcessor(nn.Module):
         super().__init__()
         self.coord_net = nn.Sequential(
             nn.Linear(3, hidden_dim),
+            nn.Batchnorm(),
             nn.Tanh(),
             nn.Linear(hidden_dim, hidden_dim),
+            nn.Batchnorm(),
             nn.Tanh()
         )
     
@@ -57,8 +64,10 @@ class ClimatePINN(nn.Module):
         # Combine features
         self.feature_combiner = nn.Sequential(
             nn.Conv2d(hidden_dim * 3, hidden_dim * 2, kernel_size=3, padding=1),
+            nn.Batchnorm(),
             nn.Tanh(),
             nn.Conv2d(hidden_dim * 2, hidden_dim * 2, kernel_size=3, padding=1),
+            nn.Batchnorm(),
             nn.Tanh(),
             nn.Conv2d(hidden_dim * 2, 3, kernel_size=3, padding=1)
         )
@@ -72,7 +81,7 @@ class ClimatePINN(nn.Module):
         # Move model to device
         self.to(device)
         
-        self.re_momentum = 0.9
+        self.re_momentum = 0.7
         self.previous_re = None
 
     def get_reynolds_number(self):

@@ -101,11 +101,22 @@ class ClimatePINN(nn.Module):
         
         # Move model to device
         self.to(device)
-    
+        self.re_momentum = 0.7
+        self.previous_re = None
+
     def get_reynolds_number(self):
-        # Return Reynolds number in a differentiable way
-        # Using exp ensures Re stays positive
-        return torch.exp(self.log_re)
+        clamped_log_re = torch.clamp(self.log_re, 
+                                    min=torch.log(torch.tensor(50.0, device=self.device)), 
+                                    max=torch.log(torch.tensor(1e5, device=self.device)))
+        current_re = torch.exp(clamped_log_re)
+        
+        if self.previous_re is None:
+            self.previous_re = current_re
+        
+        smoothed_re = self.re_momentum * self.previous_re + (1 - self.re_momentum) * current_re
+        self.previous_re = smoothed_re.detach()
+        
+        return smoothed_re
     
     def forward(self, meteo_inputs, masks, coords, compute_physics=True):     
         # Get original coordinates
