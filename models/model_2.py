@@ -56,7 +56,8 @@ class MaskEncoder(nn.Module):
             ResBlock(hidden_dim),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
-            nn.Tanh()
+            nn.Tanh(),
+            nn.Dropout(p=0.3)
         )
     
     def forward(self, masks):
@@ -69,7 +70,8 @@ class CoordProcessor(nn.Module):
             nn.Linear(3, hidden_dim),
             nn.Tanh(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh()
+            nn.Tanh(),
+            nn.Dropout(p=0.3)
         )
     
     def forward(self, x, y, t):

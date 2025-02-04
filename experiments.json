@@ -40,7 +40,7 @@
       "batch_size": 128,
       "epochs": 100,
       "learning_rate": 0.001,
-      "physics_weight": 1.0,
+      "physics_weight": 2.0,
       "data_weight": 1.0,
       "data_dir": "./data/era_5_data"
     },
