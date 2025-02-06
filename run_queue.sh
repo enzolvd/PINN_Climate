@@ -64,7 +64,7 @@ QUEUE_MANAGER="$WORK_DIR/experiment_queue.py"
     cat << EOF > temp_training_script.sh
 #!/bin/bash
 #SBATCH --job-name=pinn_train
-#SBATCH --time=03:55:00
+#SBATCH --time=03:59:00
 #SBATCH --gpus=1
 #SBATCH --partition=$PARTITION
 

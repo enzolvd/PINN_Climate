@@ -10,7 +10,7 @@ completion_handler.sh
 *.out
 experiment_queue/
 experiment.json
-
+ideas.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
