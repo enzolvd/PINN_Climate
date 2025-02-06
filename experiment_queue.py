@@ -29,11 +29,39 @@ class ExperimentQueue:
             json.dump(data, f, indent=2)
 
     def add_experiments(self, experiments: List[Dict]):
-        """Add new experiments to the queue."""
+        """Add new experiments to the queue, avoiding duplicates."""
+        # Load current state
         current_queue = self._load_json(self.queue_file)
-        current_queue.extend(experiments)
-        self._save_json(self.queue_file, current_queue)
-        print(f"Added {len(experiments)} experiments to queue")
+        completed = self._load_json(self.completed_file)
+        current = self._load_json(self.current_file) if self.current_file.exists() else []
+        
+        # Get existing experiment names
+        existing_names = set()
+        
+        # Add names from queue
+        existing_names.update(exp["experiment_name"] for exp in current_queue)
+        
+        # Add names from completed
+        existing_names.update(exp["experiment_name"] for exp in completed)
+        
+        # Add current if exists
+        if isinstance(current, dict):
+            existing_names.add(current["experiment_name"])
+        elif isinstance(current, list) and current:
+            existing_names.update(exp["experiment_name"] for exp in current)
+        
+        # Filter out experiments that already exist
+        new_experiments = [
+            exp for exp in experiments 
+            if exp["experiment_name"] not in existing_names
+        ]
+        
+        if new_experiments:
+            current_queue.extend(new_experiments)
+            self._save_json(self.queue_file, current_queue)
+            print(f"Added {len(new_experiments)} new experiments to queue")
+        else:
+            print("No new experiments to add - all already exist in queue/current/completed")
 
     def get_next_experiment(self) -> Dict:
         """Get the next experiment from the queue."""
