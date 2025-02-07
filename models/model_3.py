@@ -127,7 +127,12 @@ class ClimatePINN(nn.Module):
 
         # Move model to device
         self.to(device)
-
+        self.re_momentum = 0.7
+        self.previous_re = None
+    
+    def get_reynolds_number(self):
+        return self.Re.mean()
+    
     def forward(self, meteo_inputs, masks, coords, compute_physics=True):
         # Get original coordinates
         x = coords[0].requires_grad_(True)  # [32, 32, 64]
@@ -177,12 +182,12 @@ class ClimatePINN(nn.Module):
             v_yy = torch.autograd.grad(v_y, y, grad_outputs=torch.ones_like(v_pred), create_graph=True, retain_graph=True)[0]
 
             # Get Reynolds number
-            Re = self.reynolds_network(u_pred, v_pred)
-
+            self.Re = self.reynolds_network(u_pred, v_pred)
+            
             # Compute residuals
             e1 = u_x + u_y  # Continuity equation
-            e2 = u_t + (u_pred * u_x + v_pred * u_y) - (1/Re) * (u_xx + u_yy)  # x-momentum
-            e3 = v_t + (u_pred * v_x + v_pred * v_y) - (1/Re) * (v_xx + v_yy)  # y-momentum
+            e2 = u_t + (u_pred * u_x + v_pred * u_y) - (1/self.Re) * (u_xx + u_yy)  # x-momentum
+            e3 = v_t + (u_pred * v_x + v_pred * v_y) - (1/self.Re) * (v_xx + v_yy)  # y-momentum
 
             physics_loss = {
                             'e1': self.MSE(e1, torch.zeros_like(e1)),
