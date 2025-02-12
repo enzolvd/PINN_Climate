@@ -468,7 +468,7 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
         os.path.join(save_dir, f'temperature_prediction_{year}.mp4'), year, fps=fps)
 
     compute_animation_for_temperature_difference(temp_true, temp_pred, lat, lon, "Temperature (°C)", 
-                                                 os.path.join(save_dir, f'temperature_prediction_{year}.mp4'), year, fps=fps)
+                                                 os.path.join(save_dir, f'temperature_prediction_{year}_comp.mp4'), year, fps=fps)
     # Denormalize wind predictions and targets
     wind_pred = predictions[:, 1:3]  # Wind predictions (u and v components)
     wind_true = targets[:, 1:3]      # True wind
