@@ -420,6 +420,12 @@ def generate_predictions(model, dataloader, device, duration=10):
     targets = torch.cat(targets, axis=0).numpy()
     return predictions, targets, norm_params
 
+def transform_longitude(arr):
+    # For longitude 64 points, split at index 32
+    second_half = arr[:, :, :, :32]   
+    first_half = arr[:, :, :, 32:]     
+    return np.concatenate([first_half, second_half], axis=-1)
+
 def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/era_5_data', save_dir='visualizations'):
     """Generate and save static and animated visualizations."""
     save_dir += f'/{run_name}' 
@@ -447,8 +453,10 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
 
     # Generate predictions
     predictions, targets, norm_params = generate_predictions(model, val_loader, device, duration)
+    predictions = transform_longitude(predictions)
+    targets = transform_longitude(targets)
 
-    # Get coordinates
+    # # Get coordinates
     lat = np.linspace(-90, 90, predictions.shape[-2])
     lon = np.linspace(-180, 180, predictions.shape[-1])
 
@@ -488,9 +496,10 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
 if __name__ == "__main__":
     runs = ['run_4', 'run_7', 'run_8', 'run_9']
 
-    fps = 48
+    fps = 5
     year = 2000
-    duration = 20
+    duration = 10
 
     for run in tqdm(runs):
-        visualize_predictions(run, year, fps=fps, duration=duration)
+        visualize_predictions('run_8', year, fps=fps, duration=duration)
+        break
