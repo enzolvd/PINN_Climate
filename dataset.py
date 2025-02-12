@@ -196,7 +196,6 @@ def load_dataset(
     if not train_val_split:
         years = np.arange(year0, year0 + nb_file, 1, dtype=np.int32)
         datasets['train'] = ERADataset(root_dir=root_dir, years=years, normalize=normalize)
-
     else:
         nb_train = np.floor(nb_file * train_val_split).astype(np.int32)
         nb_val = nb_file - nb_train
@@ -213,5 +212,5 @@ def load_dataset(
             normalize=normalize,
             norm_params=datasets['train'].get_norm_params()  # Pass training normalization parameters
         )
-
+    
     return datasets
