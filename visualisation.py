@@ -141,7 +141,7 @@ def compute_animation_for_scalar(true_data, predicted_data, lat, lon, title, sav
 
     # Create and save animation
     interval = np.floor(1000 / fps)
-    ani = FuncAnimation(fig, update_scalar, frames=tqdm(range(n_timesteps)),
+    ani = FuncAnimation(fig, update_scalar, frames=tqdm(range(n_timesteps), leave=False),
                         interval=interval, blit=True)
 
     print(f"Saving animation to {save_path}")
@@ -202,7 +202,7 @@ def compute_animation_for_temperature_difference(true_data, predicted_data, lat,
 
     # Create and save animation
     interval = 1000 / fps  # Calculate interval based on fps
-    ani = FuncAnimation(fig, update_temperature, frames=tqdm(range(n_timesteps)),
+    ani = FuncAnimation(fig, update_temperature, frames=tqdm(range(n_timesteps), leave=False),
                         interval=interval, blit=True)
 
     print(f"Saving animation to {save_path}")
@@ -278,7 +278,7 @@ def compute_animation_for_vector_difference(true_vector_data, predicted_vector_d
 
     # Create and save animation
     interval = 1000 / fps  # Calculate interval based on fps
-    ani = FuncAnimation(fig, update_vector, frames=tqdm(range(n_timesteps)),
+    ani = FuncAnimation(fig, update_vector, frames=tqdm(range(n_timesteps), leave=False),
                         interval=interval, blit=True)
 
     print(f"Saving animation to {save_path}")
@@ -372,7 +372,7 @@ def compute_animation_for_vector(true_vector_data, predicted_vector_data, lat, l
 
     # Create and save animation
     interval = 1000 / fps  # Calculate interval based on fps
-    ani = FuncAnimation(fig, update_vector, frames=tqdm(range(n_timesteps)),
+    ani = FuncAnimation(fig, update_vector, frames=tqdm(range(n_timesteps), leave=False),
                         interval=interval, blit=True)
 
     print(f"Saving animation to {save_path}")
@@ -424,6 +424,7 @@ def generate_predictions(model, dataloader, device, duration=10):
 
 def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/era_5_data', save_dir='visualizations'):
     """Generate and save static and animated visualizations."""
+    save_dir += f'/{run_name}' 
     os.makedirs(save_dir, exist_ok=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -487,7 +488,11 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
     compute_animation_for_vector_difference(wind_true, wind_pred, lat, lon, "Predicted Wind (m/s)", 
                                  os.path.join(save_dir, f'wind_prediction_{year}_diff.mp4'), year, fps=24)
 if __name__ == "__main__":
-    fps = 30
+    runs = ['run_2', 'run_4', 'run_7', 'run_8', 'run_9']
+
+    fps = 48
     year = 2000
-    duration = 30
-    visualize_predictions('run_8', year, fps=fps, duration=duration)
+    duration = 20
+
+    for run in tqdm(runs):
+        visualize_predictions('run_8', year, fps=fps, duration=duration)
