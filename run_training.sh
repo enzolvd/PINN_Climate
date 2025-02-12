@@ -202,7 +202,7 @@ EOF
 
     # Submit the job with slightly shorter duration
     echo "Submitting job to partition: $PARTITION"
-    srun --time=03:55:00 --partition=$PARTITION --gpus=1 ./temp_training_script.sh
+    srun --time=03:59:00 --partition=$PARTITION --gpus=1 ./temp_training_script.sh
     
     # Check if job failed due to completion
     if grep -q "Training completed!" "$LOG_FILE"; then

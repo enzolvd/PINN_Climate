@@ -100,7 +100,7 @@ class ReynoldsNetwork(nn.Module):
         return re
 
 class ClimatePINN(nn.Module):
-    def __init__(self, hidden_dim=64, device='cpu'):
+    def __init__(self, hidden_dim=64, initial_re=100.0, device='cpu'):
         super().__init__()
         self.device = device
 
@@ -127,8 +127,6 @@ class ClimatePINN(nn.Module):
 
         # Move model to device
         self.to(device)
-        self.re_momentum = 0.7
-        self.previous_re = None
     
     def get_reynolds_number(self):
         return self.Re.mean()
