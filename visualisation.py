@@ -495,4 +495,4 @@ if __name__ == "__main__":
     duration = 20
 
     for run in tqdm(runs):
-        visualize_predictions('run_8', year, fps=fps, duration=duration)
+        visualize_predictions(run, year, fps=fps, duration=duration)
