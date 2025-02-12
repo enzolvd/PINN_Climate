@@ -488,7 +488,7 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
     compute_animation_for_vector_difference(wind_true, wind_pred, lat, lon, "Predicted Wind (m/s)", 
                                  os.path.join(save_dir, f'wind_prediction_{year}_diff.mp4'), year, fps=24)
 if __name__ == "__main__":
-    runs = ['run_2', 'run_4', 'run_7', 'run_8', 'run_9']
+    runs = ['run_4', 'run_7', 'run_8', 'run_9']
 
     fps = 48
     year = 2000
