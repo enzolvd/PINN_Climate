@@ -489,17 +489,16 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
     wind_true[:, 1] = denormalize_variable(wind_true[:, 1], norm_params['10m_v_component_of_wind'])
 
     compute_animation_for_vector(wind_true, wind_pred, lat, lon, "Predicted Wind (m/s)", 
-                                 os.path.join(save_dir, f'wind_prediction_{year}.mp4'), year, fps=24)
+                                 os.path.join(save_dir, f'wind_prediction_{year}.mp4'), year, fps=fps)
 
     compute_animation_for_vector_difference(wind_true, wind_pred, lat, lon, "Predicted Wind (m/s)", 
-                                 os.path.join(save_dir, f'wind_prediction_{year}_diff.mp4'), year, fps=24)
+                                 os.path.join(save_dir, f'wind_prediction_{year}_diff.mp4'), year, fps=fps)
 if __name__ == "__main__":
     runs = ['run_4', 'run_7', 'run_8', 'run_9']
 
-    fps = 5
+    fps = 48
     year = 2000
-    duration = 10
+    duration = 20
 
     for run in tqdm(runs):
-        visualize_predictions('run_8', year, fps=fps, duration=duration)
-        break
+        visualize_predictions(run, year, fps=fps, duration=duration)

@@ -536,10 +536,10 @@ def main():
         normalize=True
     )
     
-    train_loader = DataLoader(datasets['train'], batch_size=args.batch_size, shuffle=True)
+    train_loader = DataLoader(datasets['train'], batch_size=args.batch_size, shuffle=True, num_workers=8)
     
     if train_val_split is not None:
-        val_loader = DataLoader(datasets['val'], batch_size=args.batch_size, shuffle=False)
+        val_loader = DataLoader(datasets['val'], batch_size=args.batch_size, shuffle=False, num_workers=8)
         print(f"Loaded {len(datasets['train'])} training samples and {len(datasets['val'])} validation samples")
     else:
         val_loader = None
