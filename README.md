@@ -25,7 +25,7 @@ This repository implements a Physics-Informed Neural Network (PINN) approach to 
 
 ```
 climate-pinn/
-├── data/                     # Data directory (not included in repo)
+├── data/                     
 │   └── era_5_data/           # ERA5 climate data
 │       ├── constants/        # Constant fields (orography, land-sea mask, soil type)
 │       ├── geopotential_500/ # Geopotential at 500 hPa
@@ -33,13 +33,7 @@ climate-pinn/
 │       ├── temperature_850/  # Temperature at 850 hPa
 │       ├── 10m_u_component_of_wind/
 │       └── 10m_v_component_of_wind/
-├── models/                   # Model definitions
-│   ├── model_0.py            # Original model
-│   ├── model_0_Re.py         # Model with clipped gradient and momentum on Reynolds number
-│   ├── model_1.py            # Model with modified dropout placement
-│   ├── model_2.py            # Model with well-placed dropout and Reynolds number adjustments
-│   ├── model_3.py            # Model with neural network for Reynolds number estimation
-│   └── models.txt            # Description of model variants
+├── models     
 ├── experiment_runner/        # Experiment queue management: for cluster working with SLURM and crontab
 ├── dataset.py                # ERA5 dataset loading and preprocessing
 ├── train.py                  # Training script
@@ -110,7 +104,7 @@ data/
     └── 10m_v_component_of_wind/
 ```
 
-Each variable directory should contain yearly NetCDF files (e.g., `geopotential_500_1979_data.nc`).
+Each variable directory should contain yearly NetCDF files (e.g., `geopotential_500_1979_data.nc`). 
 
 ## Training
 
