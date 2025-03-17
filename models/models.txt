@@ -1,0 +1,8 @@
+model_0: original model
+model_0_Re: model_0 swith clipped gradient and momentum on the Re number
+
+model_1: missplaced Dropout
+
+model_2: well placed Dropout with clipped and momentum Re
+
+model_3: model_2 with a NN for the Re 

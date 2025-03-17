@@ -31,7 +31,7 @@ class ERADataset(Dataset):
         normalize = True,
         vars = base_vars, 
         input_target_repartition = input_target_repartition,
-        norm_params = None):  # Add norm_params parameter
+        norm_params = None):  
 
         super().__init__()
 

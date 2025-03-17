@@ -35,12 +35,12 @@ class MeteoEncoder(nn.Module):
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
-            nn.Tanh(),
+            nn.ReLU(),
             ResBlock(hidden_dim),
+            nn.Dropout(p=0.2),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
-            nn.Tanh(),
-            nn.Dropout(p=0.2)
+            nn.ReLU()
         )
     
     def forward(self, x):
@@ -52,12 +52,12 @@ class MaskEncoder(nn.Module):
         self.cnn = nn.Sequential(
             nn.Conv2d(n_masks, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
-            nn.Tanh(),
+            nn.ReLU(),
             ResBlock(hidden_dim),
+            nn.Dropout(p=0.2),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim),
-            nn.Tanh(),
-            nn.Dropout(p=0.3)
+            nn.ReLU()
         )
     
     def forward(self, masks):
@@ -68,10 +68,10 @@ class CoordProcessor(nn.Module):
         super().__init__()
         self.coord_net = nn.Sequential(
             nn.Linear(3, hidden_dim),
-            nn.Tanh(),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh(),
-            nn.Dropout(p=0.3)
+            nn.ReLU()
         )
     
     def forward(self, x, y, t):
@@ -93,10 +93,10 @@ class ClimatePINN(nn.Module):
         self.feature_combiner = nn.Sequential(
             nn.Conv2d(hidden_dim * 3, hidden_dim * 2, kernel_size=3, padding=1),
             nn.BatchNorm2d(hidden_dim*2),
-            nn.Tanh(),
+            nn.ReLU(),
             ResBlock(hidden_dim*2),
-            nn.Conv2d(hidden_dim * 2, 3, kernel_size=3, padding=1),
-            nn.Dropout(p=0.2)
+            nn.Dropout(p=0.2),
+            nn.Conv2d(hidden_dim * 2, 3, kernel_size=3, padding=1)
         )
         
         # Learnable Reynolds number parameter
