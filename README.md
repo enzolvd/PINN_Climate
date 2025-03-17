@@ -154,6 +154,8 @@ For running multiple experiments sequentially:
 
 The repository includes configuration for training on SLURM clusters. The experiment queue system automatically submits jobs to available SLURM partitions.
 
+## Model Weights
+Weights for each model are available on this [Huggingface page](https://huggingface.co/enzolouv/PINN_Climate).
 ## Visualization
 
 To generate visualizations of model predictions:
