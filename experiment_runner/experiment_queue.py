@@ -20,8 +20,15 @@ class ExperimentQueue:
             
     def _load_json(self, file_path: Path) -> List[Dict]:
         if file_path.exists():
-            with open(file_path, 'r') as f:
-                return json.load(f)
+            try:
+                with open(file_path, 'r') as f:
+                    content = f.read().strip()
+                    if not content:  # Empty file
+                        return []
+                    return json.loads(content)
+            except json.JSONDecodeError:
+                print(f"Warning: Could not parse JSON from {file_path}. Using empty list instead.")
+                return []
         return []
 
     def _save_json(self, file_path: Path, data: List[Dict]):
@@ -97,7 +104,17 @@ class ExperimentQueue:
         """Get the current status of the queue."""
         queue = self._load_json(self.queue_file)
         completed = self._load_json(self.completed_file)
-        current = self._load_json(self.current_file) if self.current_file.exists() else None
+        
+        # Handle current file more carefully
+        current = None
+        if self.current_file.exists():
+            try:
+                current = self._load_json(self.current_file)
+                # If we got an empty list but expected a dict, set to None
+                if isinstance(current, list) and not current:
+                    current = None
+            except Exception as e:
+                print(f"Error loading current file: {e}")
         
         return {
             "queued": len(queue),
@@ -110,9 +127,11 @@ def main():
     parser = argparse.ArgumentParser(description="Manage experiment queue")
     parser.add_argument("--action", choices=["add", "status", "get_next", "mark_completed"], required=True)
     parser.add_argument("--experiments", type=str, help="JSON file containing experiments to add")
+    parser.add_argument("--queue_dir", type=str, default="experiment_queue", 
+                        help="Directory to store queue files (default: experiment_queue)")
     args = parser.parse_args()
 
-    queue = ExperimentQueue()
+    queue = ExperimentQueue(queue_dir=args.queue_dir)
 
     if args.action == "add" and args.experiments:
         with open(args.experiments, 'r') as f:

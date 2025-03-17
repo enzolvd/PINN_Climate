@@ -11,6 +11,7 @@ completion_handler.sh
 experiment_queue/
 experiment.json
 ideas.md
+run_visu.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
