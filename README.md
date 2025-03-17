@@ -6,7 +6,7 @@
 
 This repository implements a Physics-Informed Neural Network (PINN) approach to climate modeling, combining deep learning with physical constraints from fluid dynamics. The model is trained on ERA5 climate reanalysis data and predicts near-surface temperature and wind patterns while respecting fundamental physics principles derived from the Navier-Stokes equations.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Data](https://img.shields.io/badge/Data-WeatherBench-darkgreen)]([https://huggingface.co/enzolouv/PINN_Climate](https://github.com/pangeo-data/WeatherBench)) [![Weights](https://img.shields.io/badge/Weights-HF-red)](https://huggingface.co/enzolouv/PINN_Climate) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Data](https://img.shields.io/badge/Data-WeatherBench-darkgreen)](https://github.com/pangeo-data/WeatherBench) [![Weights](https://img.shields.io/badge/Weights-HF-red)](https://huggingface.co/enzolouv/PINN_Climate) 
 
 ## Features
 
