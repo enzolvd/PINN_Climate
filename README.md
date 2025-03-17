@@ -1,4 +1,4 @@
-![Logo](https://github.com/enzolvd/PINN_Climate/blob/main/logo.png)
+</center>![Logo](https://github.com/enzolvd/PINN_Climate/blob/main/logo.png)</center>
 # Climate-PINN: Physics-Informed Neural Networks for Climate Modeling
 
 This repository implements a Physics-Informed Neural Network (PINN) approach to climate modeling, combining deep learning with physical constraints from fluid dynamics. The model is trained on ERA5 climate reanalysis data and predicts near-surface temperature and wind patterns while respecting fundamental physics principles derived from the Navier-Stokes equations.
