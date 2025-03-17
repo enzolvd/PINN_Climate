@@ -1,7 +1,7 @@
 #!/bin/bash
-WORK_DIR="."
-QUEUE_MANAGER="./experiment_queue.py"
-MASTER_FILE="./experiments.json"
+WORK_DIR="./experiment_runner"
+QUEUE_MANAGER="./experiment_runner/experiment_queue.py"
+MASTER_FILE="./experiment_runner/experiments.json"
 
 # Get current status
 STATUS=$(python $QUEUE_MANAGER --action status)
