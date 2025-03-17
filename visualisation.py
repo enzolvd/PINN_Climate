@@ -496,10 +496,9 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
 if __name__ == "__main__":
     runs = ['run_4', 'run_7', 'run_8', 'run_9']
 
-    fps = 5
+    fps = 48
     year = 2000
-    duration = 10
+    duration = 20
 
     for run in tqdm(runs):
-        visualize_predictions('run_8', year, fps=fps, duration=duration)
-        break
+        visualize_predictions(run, year, fps=fps, duration=duration)
