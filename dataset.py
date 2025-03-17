@@ -47,6 +47,7 @@ class ERADataset(Dataset):
         try:
             grid_path = self.root_dir / 'constants' / 'constants.nc'
             self.grid_ds = xr.open_dataset(grid_path, engine='netcdf4')
+            print('Grid files loaded')
         except Exception as e:
             logging.error(f"Error loading constants files: {e}")
 
@@ -187,12 +188,11 @@ def load_dataset(
     year0=1979, 
     root_dir="./data/era_5_data",
     normalize=True):
-    
     datasets = {
         'train': None,
         'val': None
     }
-    
+
     if not train_val_split:
         years = np.arange(year0, year0 + nb_file, 1, dtype=np.int32)
         datasets['train'] = ERADataset(root_dir=root_dir, years=years, normalize=normalize)

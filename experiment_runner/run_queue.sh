@@ -1,9 +1,11 @@
 #!/bin/bash
 
 # Directory where the script will be executed
-WORK_DIR="/home/ensta/ensta-louvard/projet_IA/PINN_Climate"
+ROOT_DIR="$(pwd)"
+WORK_DIR="$ROOT_DIR"
 LOG_FILE="$WORK_DIR/training.log"
-QUEUE_MANAGER="$WORK_DIR/experiment_queue.py"
+QUEUE_DIR="$WORK_DIR/experiment_queue"
+QUEUE_MANAGER="$WORK_DIR/experiment_runner/experiment_queue.py"
 
 # Main execution
 {
@@ -25,11 +27,11 @@ QUEUE_MANAGER="$WORK_DIR/experiment_queue.py"
     
     # Check queue status before proceeding
     echo "Checking queue status..."
-    python3 "$QUEUE_MANAGER" --action status
+    python3 "$QUEUE_MANAGER" --action status --queue_dir "$QUEUE_DIR"
     
     # Get next experiment from queue
     echo "Attempting to get next experiment..."
-    EXPERIMENT=$(python3 "$QUEUE_MANAGER" --action get_next)
+    EXPERIMENT=$(python3 "$QUEUE_MANAGER" --action get_next --queue_dir "$QUEUE_DIR")
     if [ $? -ne 0 ]; then
         echo "Error: Failed to get experiment from queue manager. Exiting."
         exit 1
@@ -37,7 +39,7 @@ QUEUE_MANAGER="$WORK_DIR/experiment_queue.py"
     
     if [ -z "$EXPERIMENT" ]; then
         echo "No experiments in queue. Removing from crontab..."
-        crontab -l | grep -v "$WORK_DIR/run_queue.sh" | crontab -
+        crontab -l | grep -v "$WORK_DIR/experiment_runner/run_queue.sh" | crontab -
         echo "Removed from crontab. Exiting."
         exit 0
     fi
@@ -67,6 +69,8 @@ QUEUE_MANAGER="$WORK_DIR/experiment_queue.py"
 #SBATCH --time=03:59:00
 #SBATCH --gpus=1
 #SBATCH --partition=$PARTITION
+#SBATCH --out=train%j.out
+#SBATCH --error=train%j.err
 
 # Change to work directory
 cd "$WORK_DIR"
@@ -123,7 +127,7 @@ training_exit_code=\$?
 
 if [ \$training_exit_code -eq 0 ]; then
     echo "Training completed successfully!"
-    python3 "$QUEUE_MANAGER" --action mark_completed
+    python3 "$QUEUE_MANAGER" --action mark_completed --queue_dir "$QUEUE_DIR"
 fi
 
 # Always cleanup experiment.json at the end

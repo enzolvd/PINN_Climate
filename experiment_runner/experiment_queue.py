@@ -75,13 +75,21 @@ class ExperimentQueue:
         # First check if there's a current experiment
         if self.current_file.exists():
             current = self._load_json(self.current_file)
-            return current
-            
+            # Make sure current is not empty before returning
+            if current and (isinstance(current, dict) or (isinstance(current, list) and len(current) > 0)):
+                return current
+            else:
+                # If current is empty or invalid, delete it and continue to queue
+                print("Current file exists but contains no valid experiment. Removing it.")
+                self.current_file.unlink(missing_ok=True)
+                
         # If no current experiment, get next from queue
         queue = self._load_json(self.queue_file)
         if not queue:
+            print("Queue is empty. No experiments to run.")
             return None
         
+        print(f"Found {len(queue)} experiments in queue. Getting the first one.")
         # Get next experiment and remove it from queue
         next_exp = queue.pop(0)
         self._save_json(self.queue_file, queue)
