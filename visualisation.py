@@ -21,11 +21,11 @@ mpl.use('Agg')
 
 def load_checkpoint(run_name, device=torch.device('cpu'), type='best', checkpoints='./checkpoints'):
     checkpoints = Path(checkpoints)
-    with open('experiments.json', 'r') as file:
+    with open('./experiment_runner/experiments.json', 'r') as file:
         configs = json.load(file)
     idx = np.flatnonzero([run_name == configs[i]['experiment_name'] for i in range(len(configs))])[0]
     config = configs[idx]
-    file_name = run_name + f'_{type}.pt'
+    file_name =  f'{config['model']}.pt'
     checkpoint_path = checkpoints / config['model'] / file_name
     checkpoint = torch.load(checkpoint_path)
 
@@ -46,7 +46,7 @@ def load_checkpoint(run_name, device=torch.device('cpu'), type='best', checkpoin
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()  # Set to evaluation mode
 
-    return model, checkpoint['epoch'], config, device
+    return model, checkpoint['epoch'], config, device, config['model'] 
 
 def denormalize_variable(data, var_params):
     # Convert var_params to numpy if they're tensors
@@ -324,8 +324,9 @@ def compute_animation_for_vector(true_vector_data, predicted_vector_data, lat, l
         magnitude_true = np.sqrt(u_true**2 + v_true**2)
 
         # Create quiver plot for true data
-        q_true = ax1.quiver(lon2d[::2, ::2], lat2d[::2, ::2],
-                            u_true[::2, ::2], v_true[::2, ::2], magnitude_true[::2, ::2],
+        n = 1
+        q_true = ax1.quiver(lon2d[::n, ::n], lat2d[::n, ::n],
+                            u_true[::n, ::n], v_true[::n, ::n], magnitude_true[::n, ::n],
                             transform=ccrs.PlateCarree(),
                             scale=2,
                             scale_units='xy',
@@ -426,14 +427,14 @@ def transform_longitude(arr):
     first_half = arr[:, :, :, 32:]     
     return np.concatenate([first_half, second_half], axis=-1)
 
-def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/era_5_data', save_dir='visualizations'):
+def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/era_5_data', save_dir='.'):
     """Generate and save static and animated visualizations."""
-    save_dir += f'/{run_name}' 
-    os.makedirs(save_dir, exist_ok=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Load checkpoint with configuration and get device
-    model, epoch, config, device = load_checkpoint(run_name, device=device)
+    model, epoch, config, device, model_name = load_checkpoint(run_name, device=device)
+    save_dir += f'/visualizations/{model_name}' 
+    os.makedirs(save_dir, exist_ok=True)
 
     # Load dataset
     train_norm_param = load_dataset(
@@ -494,7 +495,7 @@ def visualize_predictions(run_name, year, fps=24, duration=10, data_dir='./data/
     compute_animation_for_vector_difference(wind_true, wind_pred, lat, lon, "Predicted Wind (m/s)", 
                                  os.path.join(save_dir, f'wind_prediction_{year}_diff.mp4'), year, fps=fps)
 if __name__ == "__main__":
-    runs = ['run_4', 'run_7', 'run_8', 'run_9']
+    runs = ['run_1', 'run_3', 'run_4', 'run_8', 'run_9']
 
     fps = 48
     year = 2000
