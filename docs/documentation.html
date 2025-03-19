@@ -261,8 +261,6 @@
                 <li><a href="#training" class="toc-h1">Training</a>
                     <ul>
                         <li><a href="#single-experiment" class="toc-h2">Single Experiment</a></li>
-                        <li><a href="#experiment-queue" class="toc-h2">Using Experiment Queue</a></li>
-                        <li><a href="#slurm-training" class="toc-h2">SLURM Training</a></li>
                     </ul>
                 </li>
                 <li><a href="#visualizations" class="toc-h1">Visualization Tools</a>
@@ -437,44 +435,7 @@ val_loader = DataLoader(datasets['val'], batch_size=32, shuffle=False)</code></p
                     </ul>
                 </div>
                 
-                <!-- <div id="experiment-queue" class="subsection">
-                    <h3>Using the Experiment Queue</h3>
-                    <p>For running multiple experiments sequentially, the repository includes an experiment queue system:</p>
-                    
-                    <ol>
-                        <li>Edit <code>experiment_runner/experiments.json</code> to define your experiments</li>
-                        <li>Update the queue:</li>
-                    </ol>
-                    
-                    <div class="code-block">
-                        <pre><code>./experiment_runner/update_queue.sh</code></pre>
-                    </div>
-                    
-                    <ol start="3">
-                        <li>Start the queue runner:</li>
-                    </ol>
-                    
-                    <div class="code-block">
-                        <pre><code>./experiment_runner/run_queue.sh</code></pre>
-                    </div>
-                    
-                    <p>The queue system will sequentially run all experiments, handling checkpointing and logging automatically.</p>
-                </div>
-                
-                <div id="slurm-training" class="subsection">
-                    <h3>Distributed Training on SLURM</h3>
-                    <p>The repository includes configuration for training on SLURM clusters. The experiment queue system automatically submits jobs to available SLURM partitions.</p>
-                    
-                    <p>The SLURM configuration includes:</p>
-                    <ul>
-                        <li>Automatic detection of available partitions</li>
-                        <li>Job submission with appropriate resources</li>
-                        <li>Handling of job dependencies</li>
-                        <li>Automatic conda environment activation</li>
-                    </ul>
-                    
-                    <p>The default configuration in <code>experiment_runner/run_queue.sh</code> checks for available partitions in <code>ENSTA-l40s</code> and <code>ENSTA-h100</code>.</p>
-                </div> -->
+
             </section>
 
             <section id="visualizations" class="section">
@@ -759,26 +720,7 @@ python uncertainty.py run_name year num_samples</code></pre>
                     <p>Physics constraints are incorporated into the loss function by computing residuals of fluid dynamics equations. The model is trained to minimize both data-driven loss (MSE between predictions and true values) and physics-based loss (residuals of Navier-Stokes equations). This ensures that predictions respect physical laws.</p>
                 </div>
                 
-                <!-- <div class="faq-item">
-                    <h3>How can I run experiments on a cluster?</h3>
-                    <p>The repository includes scripts for running experiments on SLURM clusters. Edit <code>experiment_runner/experiments.json</code> to define experiments, then use:</p>
-                    <div class="code-block">
-                        <pre><code>./experiment_runner/update_queue.sh
-./experiment_runner/run_queue.sh</code></pre>
-                    </div>
-                    <p>These scripts will submit jobs to available SLURM partitions and manage the experiment queue.</p>
-                </div> -->
-                
-                <!-- <div class="faq-item">
-                    <h3>What are the hardware requirements?</h3>
-                    <p>For training:</p>
-                    <ul>
-                        <li>GPU with at least 8GB VRAM (16GB+ recommended)</li>
-                        <li>16GB+ system RAM</li>
-                        <li>Storage space for ERA5 data (varies based on years used, ~2GB per year)</li>
-                    </ul>
-                    <p>For inference and visualization, lower specs may be sufficient.</p>
-                </div> -->
+
             </section>
 
             <section id="acknowledgements" class="section">
