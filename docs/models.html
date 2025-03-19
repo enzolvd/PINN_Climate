@@ -652,51 +652,131 @@
         <p>Comparison of different model variants across metrics:</p>
         
         <div class="performance-table">
+            <h3>MSE Loss</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Model</th>
-                        <th>MSE (Test)</th>
-                        <th>Physics Loss</th>
-                        <th>Reynolds Number</th>
-                        <th>Training Time (hrs)</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Model 0</td>
-                        <td>0.0215</td>
-                        <td>0.0456</td>
-                        <td>~180</td>
-                        <td>3.2</td>
+                        <td>model_0</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
                     </tr>
                     <tr>
-                        <td>Model 0 Re</td>
-                        <td>0.0187</td>
-                        <td>0.0321</td>
-                        <td>~130</td>
-                        <td>3.5</td>
+                        <td>model_0_Re</td>
+                        <td>9.42e-04</td>
+                        <td>9.62e-04</td>
+                        <td>0.0016</td>
+                        <td>0.0012</td>
                     </tr>
                     <tr>
-                        <td>Model 1</td>
-                        <td>0.0198</td>
-                        <td>0.0389</td>
-                        <td>~155</td>
-                        <td>3.3</td>
+                        <td>model_2</td>
+                        <td><strong>5.89e-04</strong></td>
+                        <td><strong>6.51e-04</strong></td>
+                        <td><strong>0.0012</strong></td>
+                        <td>8.22e-04</td>
                     </tr>
                     <tr>
-                        <td>Model 2</td>
-                        <td>0.0142</td>
-                        <td>0.0275</td>
-                        <td>~110</td>
-                        <td>4.1</td>
+                        <td>model_3</td>
+                        <td>6.08e-04</td>
+                        <td>6.57e-04</td>
+                        <td>0.0013</td>
+                        <td>8.48e-04</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Physics Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td><strong>5.56e-07</strong></td>
+                        <td><strong>5.83e-07</strong></td>
+                        <td><strong>6.69e-07</strong></td>
+                        <td>6.03e-07</td>
                     </tr>
                     <tr>
-                        <td>Model 3</td>
-                        <td>0.0124</td>
-                        <td>0.0218</td>
-                        <td>Spatially varying</td>
-                        <td>4.8</td>
+                        <td>model_0_Re</td>
+                        <td>6.08e-05</td>
+                        <td>6.59e-05</td>
+                        <td>6.11e-05</td>
+                        <td>6.26e-05</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td>3.29e-06</td>
+                        <td>2.70e-06</td>
+                        <td>3.51e-06</td>
+                        <td>3.17e-06</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>5.04e-06</td>
+                        <td>3.72e-06</td>
+                        <td>5.50e-06</td>
+                        <td>4.75e-06</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Total Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                    </tr>
+                    <tr>
+                        <td>model_0_Re</td>
+                        <td>0.0010</td>
+                        <td>0.0010</td>
+                        <td>0.0017</td>
+                        <td>0.0012</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td><strong>5.92e-04</strong></td>
+                        <td><strong>6.54e-04</strong></td>
+                        <td><strong>0.0012</strong></td>
+                        <td>8.25e-04</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>6.13e-04</td>
+                        <td>6.61e-04</td>
+                        <td>0.0013</td>
+                        <td>8.53e-04</td>
                     </tr>
                 </tbody>
             </table>
@@ -713,7 +793,7 @@
             </div>
         </div>
         
-        <p class="result-summary">Model 3 demonstrates the best overall performance with the lowest MSE and physics constraint violations, while Model 2 offers a good balance between performance and computational efficiency.</p>
+        <p class="result-summary">Model 2 demonstrates the best overall performance with the lowest MSE and total loss across all datasets, while Model 0 shows the lowest physics constraint violations. This suggests that Model 2 offers the best balance between data prediction accuracy and physics-informed constraints.</p>
     </div>
 
     <div class="section">
