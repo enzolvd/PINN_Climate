@@ -129,25 +129,6 @@ python train.py \
     --data_dir=./data/era_5_data
 ```
 
-### Using the Experiment Queue
-
-For running multiple experiments sequentially:
-
-1. Edit `experiment_runner/experiments.json` to define your experiments
-2. Update the queue:
-```bash
-./experiment_runner/update_queue.sh
-```
-
-3. Start the queue runner:
-```bash
-./experiment_runner/run_queue.sh
-```
-
-### Distributed Training on SLURM
-
-The repository includes configuration for training on SLURM clusters. The experiment queue system automatically submits jobs to available SLURM partitions.
-
 ## Model Weights
 Weights for each model are available on this [Huggingface page](https://huggingface.co/enzolouv/PINN_Climate).
 ## Visualization
