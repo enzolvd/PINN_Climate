@@ -210,6 +210,7 @@
             margin: 15px 0;
             font-family: 'Georgia', serif;
             text-align: center;
+            font-size: 18px;
         }
         
         .code-snippet {
@@ -389,6 +390,940 @@
             }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath: [['
+<body>
+    <a href="https://github.com/enzolvd/PINN_Climate" target="_blank" class="github-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+            <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.2-1.8-1.2-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.3 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.2 2.9.1 3.3.8.8 1.3 1.8 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1 .8 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"></path>
+        </svg>
+        GitHub Repository
+    </a>
+
+    <header class="main-header">
+        <h1>Climate-PINN Model Architecture</h1>
+        <p>Exploring the different model variants and their architectural details</p>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="models.html" class="active">Model Details</a></li>
+            <li><a href="visualizations.html">Visualizations</a></li>
+            <li><a href="documentation.html">Documentation</a></li>
+        </ul>
+    </header>
+
+    <div class="section">
+        <h2>PINN Architecture Overview</h2>
+        <p>The Climate-PINN combines neural network components with physics-based constraints to create a model that respects fluid dynamics while making accurate predictions.</p>
+        
+        <div class="architecture-diagram">
+            <img src="images/architecture.png" alt="Climate-PINN Architecture Diagram" onerror="this.src='https://via.placeholder.com/800x400?text=Climate-PINN+Architecture'">
+            <p class="caption">The overall architecture of the Climate-PINN model</p>
+        </div>
+        
+        <h3>Key Components</h3>
+        <div class="component-grid">
+            <div class="component-card">
+                <h4>MeteoEncoder</h4>
+                <p>CNN-based encoder that processes meteorological input variables:</p>
+                <ul>
+                    <li>Geopotential at 500 hPa</li>
+                    <li>Temperature at 850 hPa</li>
+                </ul>
+                <p>Uses convolutional layers with non-linear activations to extract spatial features.</p>
+            </div>
+            <div class="component-card">
+                <h4>MaskEncoder</h4>
+                <p>Processes geographical constraints:</p>
+                <ul>
+                    <li>Orography (terrain elevation)</li>
+                    <li>Land-sea mask</li>
+                    <li>Soil type</li>
+                </ul>
+                <p>Helps the model understand how geography affects climate patterns.</p>
+            </div>
+            <div class="component-card">
+                <h4>CoordProcessor</h4>
+                <p>Handles coordinate information:</p>
+                <ul>
+                    <li>Latitude and longitude</li>
+                    <li>Temporal coordinates</li>
+                </ul>
+                <p>Enables the model to understand spatial and temporal relationships.</p>
+            </div>
+            <div class="component-card">
+                <h4>Feature Combiner</h4>
+                <p>Integrates features from all encoders:</p>
+                <ul>
+                    <li>Concatenates features from different branches</li>
+                    <li>Processes combined features through CNN layers</li>
+                    <li>Outputs prediction for temperature and wind components</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Physics Constraints</h2>
+        <p>What makes Climate-PINN unique is its incorporation of fluid dynamics principles from the Navier-Stokes equations directly into the learning process.</p>
+        
+        <div class="constraints">
+            <div class="constraint">
+                <h3>Continuity Equation</h3>
+                <div class="equation">
+                    $\nabla \cdot \mathbf{u} = 0$
+                </div>
+                <p>Ensures conservation of mass in the fluid flow.</p>
+            </div>
+            <div class="constraint">
+                <h3>Momentum Equations</h3>
+                <div class="equation">
+                    $\frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u} \cdot \nabla)\mathbf{u} = -\nabla p + \frac{1}{Re}\nabla^2\mathbf{u}$
+                </div>
+                <p>Govern the conservation of momentum in x and y directions.</p>
+            </div>
+            <div class="constraint">
+                <h3>Reynolds Number</h3>
+                <div class="equation">
+                    $Re = \frac{\rho u L}{\mu}$
+                </div>
+                <p>The model learns an appropriate Reynolds number to balance inertial and viscous forces.</p>
+            </div>
+        </div>
+        
+        <div class="physics-loss">
+            <h3>Physics-Informed Loss Function</h3>
+            <p>The total loss combines traditional data-driven loss with physics constraint residuals:</p>
+            <div class="equation">
+                $L_{total} = L_{data} + \lambda_{physics} \times L_{physics}$
+            </div>
+            <p>Where L_physics includes residuals from continuity and momentum equations:</p>
+            <div class="code-snippet">
+                <pre><code>physics_loss = {
+    'e1': self.MSE(e1, torch.zeros_like(e1)),  # Continuity equation 
+    'e2': self.MSE(e2, torch.zeros_like(e2)),  # x-momentum
+    'e3': self.MSE(e3, torch.zeros_like(e3))   # y-momentum
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Model Variants</h2>
+        <p>The repository includes several model variants with progressive improvements.</p>
+        
+        <div class="variant-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="model0">Model 0</button>
+                <button class="tab-btn" data-tab="model0Re">Model 0 Re</button>
+                <button class="tab-btn" data-tab="model1">Model 1</button>
+                <button class="tab-btn" data-tab="model2">Model 2</button>
+                <button class="tab-btn" data-tab="model3">Model 3</button>
+            </div>
+            
+            <div class="tab-content">
+                <div class="tab-pane active" id="model0">
+                    <h3>Model 0: Baseline</h3>
+                    <p>The original baseline model with basic architecture.</p>
+                    <h4>Key Features:</h4>
+                    <ul>
+                        <li>Basic encoder-decoder architecture</li>
+                        <li>Simple physics constraints integration</li>
+                        <li>No specialized handling of Reynolds number</li>
+                        <li>Tanh activation functions</li>
+                    </ul>
+                    <h4>Architecture Diagram:</h4>
+                    <div class="model-diagram">
+                        <img src="images/model0.png" alt="Model 0 Architecture" onerror="this.src='https://via.placeholder.com/600x300?text=Model+0+Architecture'">
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="model0Re">
+                    <h3>Model 0 Re: Enhanced Reynolds Number</h3>
+                    <p>Improved handling of the Reynolds number parameter with gradient clipping and momentum.</p>
+                    <h4>Key Improvements:</h4>
+                    <ul>
+                        <li>Clipped gradient for the Reynolds number</li>
+                        <li>Momentum-based smoothing of Reynolds number updates</li>
+                        <li>Added BatchNorm layers for stability</li>
+                        <li>Constrained Reynolds number to physically meaningful range (50-1e5)</li>
+                    </ul>
+                    <h4>Reynolds Number Code:</h4>
+                    <div class="code-snippet">
+                        <pre><code>def get_reynolds_number(self):
+    clamped_log_re = torch.clamp(self.log_re, 
+                                min=torch.log(torch.tensor(50.0, device=self.device)), 
+                                max=torch.log(torch.tensor(1e5, device=self.device)))
+    current_re = torch.exp(clamped_log_re)
+    
+    if self.previous_re is None:
+        self.previous_re = current_re
+    
+    smoothed_re = self.re_momentum * self.previous_re + (1 - self.re_momentum) * current_re
+    self.previous_re = smoothed_re.detach()
+    
+    return smoothed_re</code></pre>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="model1">
+                    <h3>Model 1: Modified Dropout</h3>
+                    <p>Introduction of dropout layers for improved generalization.</p>
+                    <h4>Key Changes:</h4>
+                    <ul>
+                        <li>Added dropout layers (p=0.2) for regularization</li>
+                        <li>Positioning of dropout after activation functions</li>
+                        <li>Maintained Tanh activation functions</li>
+                        <li>No changes to Reynolds number handling</li>
+                    </ul>
+                    <p>Note: This model has suboptimal dropout placement which was corrected in Model 2.</p>
+                </div>
+                
+                <div class="tab-pane" id="model2">
+                    <h3>Model 2: Optimized Architecture</h3>
+                    <p>Significant architectural improvements including residual connections and proper dropout placement.</p>
+                    <h4>Major Enhancements:</h4>
+                    <ul>
+                        <li>Added residual connections (ResBlocks) for better gradient flow</li>
+                        <li>Switched from Tanh to ReLU activations</li>
+                        <li>Proper placement of dropout layers</li>
+                        <li>Improved Reynolds number handling with clipping and momentum</li>
+                        <li>Added BatchNorm for more stable training</li>
+                    </ul>
+                    <h4>ResBlock Implementation:</h4>
+                    <div class="code-snippet">
+                        <pre><code>class ResBlock(torch.nn.Module):
+    def __init__(self, in_channel):        
+        super().__init__()
+        
+        self.conv_block = torch.nn.Sequential(
+                    torch.nn.Conv2d(in_channels=in_channel,
+                            out_channels=in_channel,
+                            kernel_size=3,
+                            stride=1,
+                            padding='same'),
+                    torch.nn.BatchNorm2d(in_channel),
+                    torch.nn.ReLU(),
+                    torch.nn.Conv2d(in_channels=in_channel,
+                            out_channels=in_channel,
+                            kernel_size=3,
+                            stride=1,
+                            padding='same'),
+                    torch.nn.BatchNorm2d(in_channel)                         
+        )
+        self.act = torch.nn.ReLU()
+
+    def forward(self, input):
+        out = self.conv_block(input)
+        out += input 
+        out = self.act(out)
+        return out</code></pre>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="model3">
+                    <h3>Model 3: Neural Network for Reynolds Number</h3>
+                    <p>Advanced model with a dedicated neural network for estimating the Reynolds number.</p>
+                    <h4>Key Innovations:</h4>
+                    <ul>
+                        <li>Neural network to predict spatially-varying Reynolds number</li>
+                        <li>Reynolds number estimated from local flow conditions (u, v)</li>
+                        <li>All improvements from Model 2 maintained</li>
+                        <li>More physically realistic modeling of turbulence</li>
+                    </ul>
+                    <h4>Reynolds Network:</h4>
+                    <div class="code-snippet">
+                        <pre><code>class ReynoldsNetwork(nn.Module):
+    def __init__(self, hidden_dim=16):
+        super().__init__()
+        self.re_net = nn.Sequential(
+            nn.Conv2d(2, hidden_dim, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Conv2d(hidden_dim, 1, kernel_size=3, padding=1),
+            nn.Sigmoid()  # Ensure positive output
+        )
+
+    def forward(self, u, v):
+        inputs = torch.stack([u, v], dim=1)
+        re = self.re_net(inputs)
+        # Scale output to a reasonable range for Reynolds number
+        re = re * (1e5 - 50.0) + 50.0
+        return re</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Model Performance Comparison</h2>
+        <p>Comparison of different model variants across metrics:</p>
+        
+        <div class="performance-table">
+            <h3>MSE Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                    </tr>
+                    <tr>
+                        <td>model_0_Re</td>
+                        <td>9.42e-04</td>
+                        <td>9.62e-04</td>
+                        <td>0.0016</td>
+                        <td>0.0012</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td><strong>5.89e-04</strong></td>
+                        <td><strong>6.51e-04</strong></td>
+                        <td><strong>0.0012</strong></td>
+                        <td>8.22e-04</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>6.08e-04</td>
+                        <td>6.57e-04</td>
+                        <td>0.0013</td>
+                        <td>8.48e-04</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Physics Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td><strong>5.56e-07</strong></td>
+                        <td><strong>5.83e-07</strong></td>
+                        <td><strong>6.69e-07</strong></td>
+                        <td>6.03e-07</td>
+                    </tr>
+                    <tr>
+                        <td>model_0_Re</td>
+                        <td>6.08e-05</td>
+                        <td>6.59e-05</td>
+                        <td>6.11e-05</td>
+                        <td>6.26e-05</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td>3.29e-06</td>
+                        <td>2.70e-06</td>
+                        <td>3.51e-06</td>
+                        <td>3.17e-06</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>5.04e-06</td>
+                        <td>3.72e-06</td>
+                        <td>5.50e-06</td>
+                        <td>4.75e-06</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Total Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                    </tr>
+                    <tr>
+                        <td>model_0_Re</td>
+                        <td>0.0010</td>
+                        <td>0.0010</td>
+                        <td>0.0017</td>
+                        <td>0.0012</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td><strong>5.92e-04</strong></td>
+                        <td><strong>6.54e-04</strong></td>
+                        <td><strong>0.0012</strong></td>
+                        <td>8.25e-04</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>6.13e-04</td>
+                        <td>6.61e-04</td>
+                        <td>0.0013</td>
+                        <td>8.53e-04</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="performance-charts">
+            <div class="chart">
+                <img src="images/mse_chart.png" alt="MSE Performance Chart" onerror="this.src='https://via.placeholder.com/400x300?text=MSE+Performance+Chart'">
+                <p class="caption">MSE comparison across models</p>
+            </div>
+            <div class="chart">
+                <img src="images/physics_loss_chart.png" alt="Physics Loss Chart" onerror="this.src='https://via.placeholder.com/400x300?text=Physics+Loss+Chart'">
+                <p class="caption">Physics constraint loss comparison</p>
+            </div>
+        </div>
+        
+        <p class="result-summary">Model 2 demonstrates the best overall performance with the lowest MSE and total loss across all datasets, while Model 0 shows the lowest physics constraint violations. This suggests that Model 2 offers the best balance between data prediction accuracy and physics-informed constraints.</p>
+    </div>
+
+    <div class="section">
+        <h2>Pretrained Model Weights</h2>
+        <p>Pretrained weights for all model variants are available on Hugging Face:</p>
+        <div class="weights-download">
+            <a href="https://huggingface.co/enzolouv/PINN_Climate" target="_blank" class="btn primary" style="display: inline-block;">
+                Download Model Weights
+            </a>
+        </div>
+        <p class="weights-info">All models are trained on 10 years of ERA5 data with balanced physics and data loss weights.</p>
+    </div>
+
+    <footer>
+        <p>Climate-PINN - © 2025 Enzo Louvard - MIT License</p>
+    </footer>
+
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get the target tab
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Hide all tab panes
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active');
+                    });
+                    
+                    // Show the target tab pane
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+,'
+<body>
+    <a href="https://github.com/enzolvd/PINN_Climate" target="_blank" class="github-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+            <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.2-1.8-1.2-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.3 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.2 2.9.1 3.3.8.8 1.3 1.8 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1 .8 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"></path>
+        </svg>
+        GitHub Repository
+    </a>
+
+    <header class="main-header">
+        <h1>Climate-PINN Model Architecture</h1>
+        <p>Exploring the different model variants and their architectural details</p>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="models.html" class="active">Model Details</a></li>
+            <li><a href="visualizations.html">Visualizations</a></li>
+            <li><a href="documentation.html">Documentation</a></li>
+        </ul>
+    </header>
+
+    <div class="section">
+        <h2>PINN Architecture Overview</h2>
+        <p>The Climate-PINN combines neural network components with physics-based constraints to create a model that respects fluid dynamics while making accurate predictions.</p>
+        
+        <div class="architecture-diagram">
+            <img src="images/architecture.png" alt="Climate-PINN Architecture Diagram" onerror="this.src='https://via.placeholder.com/800x400?text=Climate-PINN+Architecture'">
+            <p class="caption">The overall architecture of the Climate-PINN model</p>
+        </div>
+        
+        <h3>Key Components</h3>
+        <div class="component-grid">
+            <div class="component-card">
+                <h4>MeteoEncoder</h4>
+                <p>CNN-based encoder that processes meteorological input variables:</p>
+                <ul>
+                    <li>Geopotential at 500 hPa</li>
+                    <li>Temperature at 850 hPa</li>
+                </ul>
+                <p>Uses convolutional layers with non-linear activations to extract spatial features.</p>
+            </div>
+            <div class="component-card">
+                <h4>MaskEncoder</h4>
+                <p>Processes geographical constraints:</p>
+                <ul>
+                    <li>Orography (terrain elevation)</li>
+                    <li>Land-sea mask</li>
+                    <li>Soil type</li>
+                </ul>
+                <p>Helps the model understand how geography affects climate patterns.</p>
+            </div>
+            <div class="component-card">
+                <h4>CoordProcessor</h4>
+                <p>Handles coordinate information:</p>
+                <ul>
+                    <li>Latitude and longitude</li>
+                    <li>Temporal coordinates</li>
+                </ul>
+                <p>Enables the model to understand spatial and temporal relationships.</p>
+            </div>
+            <div class="component-card">
+                <h4>Feature Combiner</h4>
+                <p>Integrates features from all encoders:</p>
+                <ul>
+                    <li>Concatenates features from different branches</li>
+                    <li>Processes combined features through CNN layers</li>
+                    <li>Outputs prediction for temperature and wind components</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Physics Constraints</h2>
+        <p>What makes Climate-PINN unique is its incorporation of fluid dynamics principles from the Navier-Stokes equations directly into the learning process.</p>
+        
+        <div class="constraints">
+            <div class="constraint">
+                <h3>Continuity Equation</h3>
+                <div class="equation">
+                    \nabla \cdot \mathbf{u} = 0
+                </div>
+                <p>Ensures conservation of mass in the fluid flow.</p>
+            </div>
+            <div class="constraint">
+                <h3>Momentum Equations</h3>
+                <div class="equation">
+                    \frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u} \cdot \nabla)\mathbf{u} = -\nabla p + \frac{1}{Re}\nabla^2\mathbf{u}
+                </div>
+                <p>Govern the conservation of momentum in x and y directions.</p>
+            </div>
+            <div class="constraint">
+                <h3>Reynolds Number</h3>
+                <div class="equation">
+                    Re = \frac{\rho u L}{\mu}
+                </div>
+                <p>The model learns an appropriate Reynolds number to balance inertial and viscous forces.</p>
+            </div>
+        </div>
+        
+        <div class="physics-loss">
+            <h3>Physics-Informed Loss Function</h3>
+            <p>The total loss combines traditional data-driven loss with physics constraint residuals:</p>
+            <div class="equation">
+                L_{total} = L_{data} + \lambda_{physics} \times L_{physics}
+            </div>
+            <p>Where L_physics includes residuals from continuity and momentum equations:</p>
+            <div class="code-snippet">
+                <pre><code>physics_loss = {
+    'e1': self.MSE(e1, torch.zeros_like(e1)),  # Continuity equation 
+    'e2': self.MSE(e2, torch.zeros_like(e2)),  # x-momentum
+    'e3': self.MSE(e3, torch.zeros_like(e3))   # y-momentum
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Model Variants</h2>
+        <p>The repository includes several model variants with progressive improvements.</p>
+        
+        <div class="variant-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="model0">Model 0</button>
+                <button class="tab-btn" data-tab="model0Re">Model 0 Re</button>
+                <button class="tab-btn" data-tab="model1">Model 1</button>
+                <button class="tab-btn" data-tab="model2">Model 2</button>
+                <button class="tab-btn" data-tab="model3">Model 3</button>
+            </div>
+            
+            <div class="tab-content">
+                <div class="tab-pane active" id="model0">
+                    <h3>Model 0: Baseline</h3>
+                    <p>The original baseline model with basic architecture.</p>
+                    <h4>Key Features:</h4>
+                    <ul>
+                        <li>Basic encoder-decoder architecture</li>
+                        <li>Simple physics constraints integration</li>
+                        <li>No specialized handling of Reynolds number</li>
+                        <li>Tanh activation functions</li>
+                    </ul>
+                    <h4>Architecture Diagram:</h4>
+                    <div class="model-diagram">
+                        <img src="images/model0.png" alt="Model 0 Architecture" onerror="this.src='https://via.placeholder.com/600x300?text=Model+0+Architecture'">
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="model0Re">
+                    <h3>Model 0 Re: Enhanced Reynolds Number</h3>
+                    <p>Improved handling of the Reynolds number parameter with gradient clipping and momentum.</p>
+                    <h4>Key Improvements:</h4>
+                    <ul>
+                        <li>Clipped gradient for the Reynolds number</li>
+                        <li>Momentum-based smoothing of Reynolds number updates</li>
+                        <li>Added BatchNorm layers for stability</li>
+                        <li>Constrained Reynolds number to physically meaningful range (50-1e5)</li>
+                    </ul>
+                    <h4>Reynolds Number Code:</h4>
+                    <div class="code-snippet">
+                        <pre><code>def get_reynolds_number(self):
+    clamped_log_re = torch.clamp(self.log_re, 
+                                min=torch.log(torch.tensor(50.0, device=self.device)), 
+                                max=torch.log(torch.tensor(1e5, device=self.device)))
+    current_re = torch.exp(clamped_log_re)
+    
+    if self.previous_re is None:
+        self.previous_re = current_re
+    
+    smoothed_re = self.re_momentum * self.previous_re + (1 - self.re_momentum) * current_re
+    self.previous_re = smoothed_re.detach()
+    
+    return smoothed_re</code></pre>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="model1">
+                    <h3>Model 1: Modified Dropout</h3>
+                    <p>Introduction of dropout layers for improved generalization.</p>
+                    <h4>Key Changes:</h4>
+                    <ul>
+                        <li>Added dropout layers (p=0.2) for regularization</li>
+                        <li>Positioning of dropout after activation functions</li>
+                        <li>Maintained Tanh activation functions</li>
+                        <li>No changes to Reynolds number handling</li>
+                    </ul>
+                    <p>Note: This model has suboptimal dropout placement which was corrected in Model 2.</p>
+                </div>
+                
+                <div class="tab-pane" id="model2">
+                    <h3>Model 2: Optimized Architecture</h3>
+                    <p>Significant architectural improvements including residual connections and proper dropout placement.</p>
+                    <h4>Major Enhancements:</h4>
+                    <ul>
+                        <li>Added residual connections (ResBlocks) for better gradient flow</li>
+                        <li>Switched from Tanh to ReLU activations</li>
+                        <li>Proper placement of dropout layers</li>
+                        <li>Improved Reynolds number handling with clipping and momentum</li>
+                        <li>Added BatchNorm for more stable training</li>
+                    </ul>
+                    <h4>ResBlock Implementation:</h4>
+                    <div class="code-snippet">
+                        <pre><code>class ResBlock(torch.nn.Module):
+    def __init__(self, in_channel):        
+        super().__init__()
+        
+        self.conv_block = torch.nn.Sequential(
+                    torch.nn.Conv2d(in_channels=in_channel,
+                            out_channels=in_channel,
+                            kernel_size=3,
+                            stride=1,
+                            padding='same'),
+                    torch.nn.BatchNorm2d(in_channel),
+                    torch.nn.ReLU(),
+                    torch.nn.Conv2d(in_channels=in_channel,
+                            out_channels=in_channel,
+                            kernel_size=3,
+                            stride=1,
+                            padding='same'),
+                    torch.nn.BatchNorm2d(in_channel)                         
+        )
+        self.act = torch.nn.ReLU()
+
+    def forward(self, input):
+        out = self.conv_block(input)
+        out += input 
+        out = self.act(out)
+        return out</code></pre>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="model3">
+                    <h3>Model 3: Neural Network for Reynolds Number</h3>
+                    <p>Advanced model with a dedicated neural network for estimating the Reynolds number.</p>
+                    <h4>Key Innovations:</h4>
+                    <ul>
+                        <li>Neural network to predict spatially-varying Reynolds number</li>
+                        <li>Reynolds number estimated from local flow conditions (u, v)</li>
+                        <li>All improvements from Model 2 maintained</li>
+                        <li>More physically realistic modeling of turbulence</li>
+                    </ul>
+                    <h4>Reynolds Network:</h4>
+                    <div class="code-snippet">
+                        <pre><code>class ReynoldsNetwork(nn.Module):
+    def __init__(self, hidden_dim=16):
+        super().__init__()
+        self.re_net = nn.Sequential(
+            nn.Conv2d(2, hidden_dim, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Conv2d(hidden_dim, 1, kernel_size=3, padding=1),
+            nn.Sigmoid()  # Ensure positive output
+        )
+
+    def forward(self, u, v):
+        inputs = torch.stack([u, v], dim=1)
+        re = self.re_net(inputs)
+        # Scale output to a reasonable range for Reynolds number
+        re = re * (1e5 - 50.0) + 50.0
+        return re</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Model Performance Comparison</h2>
+        <p>Comparison of different model variants across metrics:</p>
+        
+        <div class="performance-table">
+            <h3>MSE Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                    </tr>
+                    <tr>
+                        <td>model_0_Re</td>
+                        <td>9.42e-04</td>
+                        <td>9.62e-04</td>
+                        <td>0.0016</td>
+                        <td>0.0012</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td><strong>5.89e-04</strong></td>
+                        <td><strong>6.51e-04</strong></td>
+                        <td><strong>0.0012</strong></td>
+                        <td>8.22e-04</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>6.08e-04</td>
+                        <td>6.57e-04</td>
+                        <td>0.0013</td>
+                        <td>8.48e-04</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Physics Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td><strong>5.56e-07</strong></td>
+                        <td><strong>5.83e-07</strong></td>
+                        <td><strong>6.69e-07</strong></td>
+                        <td>6.03e-07</td>
+                    </tr>
+                    <tr>
+                        <td>model_0_Re</td>
+                        <td>6.08e-05</td>
+                        <td>6.59e-05</td>
+                        <td>6.11e-05</td>
+                        <td>6.26e-05</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td>3.29e-06</td>
+                        <td>2.70e-06</td>
+                        <td>3.51e-06</td>
+                        <td>3.17e-06</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>5.04e-06</td>
+                        <td>3.72e-06</td>
+                        <td>5.50e-06</td>
+                        <td>4.75e-06</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Total Loss</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Train</th>
+                        <th>Val</th>
+                        <th>Test</th>
+                        <th>Average</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>model_0</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                        <td>0.0017</td>
+                    </tr>
+                    <tr>
+                        <td>model_0_Re</td>
+                        <td>0.0010</td>
+                        <td>0.0010</td>
+                        <td>0.0017</td>
+                        <td>0.0012</td>
+                    </tr>
+                    <tr>
+                        <td>model_2</td>
+                        <td><strong>5.92e-04</strong></td>
+                        <td><strong>6.54e-04</strong></td>
+                        <td><strong>0.0012</strong></td>
+                        <td>8.25e-04</td>
+                    </tr>
+                    <tr>
+                        <td>model_3</td>
+                        <td>6.13e-04</td>
+                        <td>6.61e-04</td>
+                        <td>0.0013</td>
+                        <td>8.53e-04</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="performance-charts">
+            <div class="chart">
+                <img src="images/mse_chart.png" alt="MSE Performance Chart" onerror="this.src='https://via.placeholder.com/400x300?text=MSE+Performance+Chart'">
+                <p class="caption">MSE comparison across models</p>
+            </div>
+            <div class="chart">
+                <img src="images/physics_loss_chart.png" alt="Physics Loss Chart" onerror="this.src='https://via.placeholder.com/400x300?text=Physics+Loss+Chart'">
+                <p class="caption">Physics constraint loss comparison</p>
+            </div>
+        </div>
+        
+        <p class="result-summary">Model 2 demonstrates the best overall performance with the lowest MSE and total loss across all datasets, while Model 0 shows the lowest physics constraint violations. This suggests that Model 2 offers the best balance between data prediction accuracy and physics-informed constraints.</p>
+    </div>
+
+    <div class="section">
+        <h2>Pretrained Model Weights</h2>
+        <p>Pretrained weights for all model variants are available on Hugging Face:</p>
+        <div class="weights-download">
+            <a href="https://huggingface.co/enzolouv/PINN_Climate" target="_blank" class="btn primary" style="display: inline-block;">
+                Download Model Weights
+            </a>
+        </div>
+        <p class="weights-info">All models are trained on 10 years of ERA5 data with balanced physics and data loss weights.</p>
+    </div>
+
+    <footer>
+        <p>Climate-PINN - © 2025 Enzo Louvard - MIT License</p>
+    </footer>
+
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get the target tab
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Hide all tab panes
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active');
+                    });
+                    
+                    // Show the target tab pane
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+], ['\\(','\\)']],
+                displayMath: [['$','$'], ['\\[','\\]']],
+                processEscapes: true
+            }
+        });
+    </script>
 </head>
 <body>
     <a href="https://github.com/enzolvd/PINN_Climate" target="_blank" class="github-link">
@@ -467,17 +1402,23 @@
         <div class="constraints">
             <div class="constraint">
                 <h3>Continuity Equation</h3>
-                <div class="equation">∇·u = 0</div>
+                <div class="equation">
+                    \nabla \cdot \mathbf{u} = 0
+                </div>
                 <p>Ensures conservation of mass in the fluid flow.</p>
             </div>
             <div class="constraint">
                 <h3>Momentum Equations</h3>
-                <div class="equation">∂u/∂t + (u·∇)u = -∇p + (1/Re)∇²u</div>
+                <div class="equation">
+                    \frac{\partial \mathbf{u}}{\partial t} + (\mathbf{u} \cdot \nabla)\mathbf{u} = -\nabla p + \frac{1}{Re}\nabla^2\mathbf{u}
+                </div>
                 <p>Govern the conservation of momentum in x and y directions.</p>
             </div>
             <div class="constraint">
                 <h3>Reynolds Number</h3>
-                <div class="equation">Re = ρuL/μ</div>
+                <div class="equation">
+                    Re = \frac{\rho u L}{\mu}
+                </div>
                 <p>The model learns an appropriate Reynolds number to balance inertial and viscous forces.</p>
             </div>
         </div>
@@ -485,7 +1426,9 @@
         <div class="physics-loss">
             <h3>Physics-Informed Loss Function</h3>
             <p>The total loss combines traditional data-driven loss with physics constraint residuals:</p>
-            <div class="equation">L_total = L_data + λ_physics × L_physics</div>
+            <div class="equation">
+                L_{total} = L_{data} + \lambda_{physics} \times L_{physics}
+            </div>
             <p>Where L_physics includes residuals from continuity and momentum equations:</p>
             <div class="code-snippet">
                 <pre><code>physics_loss = {
