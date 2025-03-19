@@ -19,7 +19,7 @@ mpl.rcParams['text.antialiased'] = True
 mpl.rcParams['lines.antialiased'] = True
 mpl.use('Agg')
 
-def load_checkpoint(run_name, device=torch.device('cpu'), type='best', checkpoints='./checkpoints'):
+def load_checkpoint(run_name, device=torch.device('cpu'), checkpoints='./checkpoints', verbose=True):
     checkpoints = Path(checkpoints)
     with open('./experiment_runner/experiments.json', 'r') as file:
         configs = json.load(file)
@@ -36,7 +36,8 @@ def load_checkpoint(run_name, device=torch.device('cpu'), type='best', checkpoin
     hidden_dim = config.get('hidden_dim')
     initial_re = config.get('initial_re')
 
-    print(f"Loading model with configuration: hidden_dim={hidden_dim}, initial_re={initial_re}")
+    if verbose:
+        print(f"Loading model with configuration: hidden_dim={hidden_dim}, initial_re={initial_re}")
 
     # Initialize model with loaded configuration
     model = ClimatePINN(hidden_dim=hidden_dim, initial_re=initial_re, device=device)
@@ -251,8 +252,9 @@ def compute_animation_for_vector_difference(true_vector_data, predicted_vector_d
         magnitude_diff = np.sqrt(u_diff**2 + v_diff**2)
 
         # Create quiver plot for difference
-        q_diff = ax.quiver(lon2d[::2, ::2], lat2d[::2, ::2],
-                            u_diff[::2, ::2], v_diff[::2, ::2], magnitude_diff[::2, ::2],
+        n = 1
+        q_diff = ax.quiver(lon2d[::n, ::n], lat2d[::n, ::n],
+                            u_diff[::n, ::n], v_diff[::n, ::n], magnitude_diff[::n, ::n],
                             transform=ccrs.PlateCarree(),
                             scale=2,
                             scale_units='xy',
@@ -345,8 +347,8 @@ def compute_animation_for_vector(true_vector_data, predicted_vector_data, lat, l
         magnitude_pred = np.sqrt(u_pred**2 + v_pred**2)
 
         # Create quiver plot for predicted data
-        q_pred = ax2.quiver(lon2d[::2, ::2], lat2d[::2, ::2],
-                            u_pred[::2, ::2], v_pred[::2, ::2], magnitude_pred[::2, ::2],
+        q_pred = ax2.quiver(lon2d[::n, ::n], lat2d[::n, ::n],
+                            u_pred[::n, ::n], v_pred[::n, ::n], magnitude_pred[::n, ::n],
                             transform=ccrs.PlateCarree(),
                             scale=2,
                             scale_units='xy',
