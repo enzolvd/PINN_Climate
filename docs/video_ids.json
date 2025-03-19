@@ -1,0 +1,35 @@
+{
+  "model_0": {
+    "temperature_prediction": "18VAEvIkUImFxnM6yKVw7nrNptOrzp57M",
+    "temperature_prediction_comp": "1L_2dk8UeW0nNkhRvZmDw5y2wI71LAive",
+    "wind_prediction": "1t9swSAnXjLrYDsJpZtiTeix4qH2QrSFT",
+    "wind_prediction_diff": "1de5pKDH6-3DONaR7O0-RgVBVx1U9oKy_"
+  },
+  "model_0_Re": {
+    "temperature_prediction": "1XlaDNbNisN4N0Bc2g-Dy9nSGTl2MX0zD",
+    "temperature_prediction_comp": "149vHacbh8REmEuF36FnsDO06iWk8tIEe",
+    "wind_prediction": "1fAdIZjx7NDxw-7FIoAKpJUr-Rioo1RwW",
+    "wind_prediction_diff": "1fhI0TrGyMxx0F-ATBP4hxeZOJtaWhsvH"
+  },
+  "model_1": {
+    "temperature_prediction": "1m9WXvAC6adNgQaXqiI8mgVGXLTscEVoM",
+    "temperature_prediction_comp": "10kjTdkvdjW0DbqGkza84lqdr9Y_Sb4ty",
+    "wind_prediction": "1G125gBYJ5vKAiIzssmK9ebVIhxv0t0XM",
+    "wind_prediction_diff": "1VFUlhfR2m2HMKalpqbvPa6J9wPhn0T7o"
+  },
+  "model_2": {
+    "temperature_prediction": "1ykd43WCOIEP14KvwKik31HVUwpjPrlU0",
+    "temperature_prediction_comp": "11fWVhm5lTHt_yRjuPfxPl2taIE4SUmwX",
+    "wind_prediction": "1s9IMsDVOK09HI8vyGOCE8NOXu8kJ7oZG",
+    "wind_prediction_diff": "1aSqhHXAiz5Jk5_twwPY02l1NPMCG64Ne"
+  },
+  "model_2_mc_dropout": {
+    "temperature_uncertainty": "1XBgMGP2CP7KVjZqflLPM73DUYsLdd5Fv"
+  },
+  "model_3": {
+    "temperature_prediction": "17gLvbt7Bt6FdiozZXywmCRSeIh5H-7K9",
+    "temperature_prediction_comp": "1ptZQJ2LZQ7ofKW2kVAWIAq9nGCUlH6pr",
+    "wind_prediction": "1r9S-1KgiZE_a2SzQGOlkM9P9dv-1rYTo",
+    "wind_prediction_diff": "16MtV-wFBd4xw8bJxkKj3krKhKE4PN6oj"
+  }
+}

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Model Visualizations</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --muted-text: #aaaaaa;
+            --border-color: #333333;
+            --highlight: #3a506b;
+            --accent: #5b8a72;
+            --header-bg: #1a1a1a;
+            --dropdown-bg: #2a2a2a;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--header-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1, h2, h3 {
+            color: var(--text-color);
+        }
+        
+        .model-selector {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .model-selector select {
+            padding: 12px 16px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--dropdown-bg);
+            color: var(--text-color);
+            width: 300px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .model-selector select:hover {
+            border-color: var(--accent);
+        }
+        
+        .model-selector select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(91, 138, 114, 0.3);
+        }
+        
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .video-container {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .video-container h3 {
+            color: var(--accent);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        iframe {
+            width: 100%;
+            height: 350px;
+            border: none;
+            border-radius: 4px;
+        }
+        
+        .model-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--muted-text);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: var(--muted-text);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Climate Model Visualizations</h1>
+        <p>Select a model from the dropdown to view its visualizations</p>
+    </header>
+
+    <div class="model-selector">
+        <select id="model-dropdown" onchange="showModel(this.value)">
+            <option value="">-- Select a Model --</option>
+        </select>
+    </div>
+
+    <div id="content-container">
+        <div class="loading">Loading model data...</div>
+    </div>
+
+    <footer>
+        <p>Climate Model Visualization - © 2025</p>
+    </footer>
+
+    <script>
+        // Function to format model name for display
+        function formatModelName(modelId) {
+            return modelId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        
+        // Function to generate HTML for model sections
+        function generateModelSections(data) {
+            const container = document.getElementById('content-container');
+            container.innerHTML = ''; // Clear the loading message
+            
+            // Define video types display names
+            const videoTypeNames = {
+                'temperature_prediction': 'Temperature Prediction',
+                'temperature_prediction_comp': 'Temperature Comparison',
+                'wind_prediction': 'Wind Prediction',
+                'wind_prediction_diff': 'Wind Difference',
+                'temperature_uncertainty': 'Temperature Uncertainty'
+            };
+            
+            Object.entries(data).forEach(([model, videos]) => {
+                // Create model section
+                const section = document.createElement('div');
+                section.id = model;
+                section.className = 'model-section';
+                
+                // Add heading
+                const heading = document.createElement('h2');
+                heading.textContent = formatModelName(model) + ' Visualizations';
+                section.appendChild(heading);
+                
+                // Create video grid
+                const grid = document.createElement('div');
+                grid.className = 'video-grid';
+                
+                // Add videos
+                Object.entries(videos).forEach(([videoType, fileId]) => {
+                    const videoContainer = document.createElement('div');
+                    videoContainer.className = 'video-container';
+                    
+                    const videoHeading = document.createElement('h3');
+                    videoHeading.textContent = videoTypeNames[videoType] || videoType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    videoContainer.appendChild(videoHeading);
+                    
+                    const iframe = document.createElement('iframe');
+                    iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                    iframe.setAttribute('allowfullscreen', '');
+                    videoContainer.appendChild(iframe);
+                    
+                    grid.appendChild(videoContainer);
+                });
+                
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+        }
+        
+        // Function to show the selected model and hide others
+        function showModel(modelId) {
+            // Hide all model sections
+            const modelSections = document.querySelectorAll('.model-section');
+            modelSections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show the selected model
+            if (modelId) {
+                const selectedModel = document.getElementById(modelId);
+                if (selectedModel) {
+                    selectedModel.classList.add('active');
+                }
+            }
+        }
+        
+        // Pre-loaded model data
+        const videoIdsData = {
+  "model_0": {
+    "temperature_prediction": "18VAEvIkUImFxnM6yKVw7nrNptOrzp57M",
+    "temperature_prediction_comp": "1L_2dk8UeW0nNkhRvZmDw5y2wI71LAive",
+    "wind_prediction": "1t9swSAnXjLrYDsJpZtiTeix4qH2QrSFT",
+    "wind_prediction_diff": "1de5pKDH6-3DONaR7O0-RgVBVx1U9oKy_"
+  },
+  "model_0_Re": {
+    "temperature_prediction": "1XlaDNbNisN4N0Bc2g-Dy9nSGTl2MX0zD",
+    "temperature_prediction_comp": "149vHacbh8REmEuF36FnsDO06iWk8tIEe",
+    "wind_prediction": "1fAdIZjx7NDxw-7FIoAKpJUr-Rioo1RwW",
+    "wind_prediction_diff": "1fhI0TrGyMxx0F-ATBP4hxeZOJtaWhsvH"
+  },
+  "model_1": {
+    "temperature_prediction": "1m9WXvAC6adNgQaXqiI8mgVGXLTscEVoM",
+    "temperature_prediction_comp": "10kjTdkvdjW0DbqGkza84lqdr9Y_Sb4ty",
+    "wind_prediction": "1G125gBYJ5vKAiIzssmK9ebVIhxv0t0XM",
+    "wind_prediction_diff": "1VFUlhfR2m2HMKalpqbvPa6J9wPhn0T7o"
+  },
+  "model_2": {
+    "temperature_prediction": "1ykd43WCOIEP14KvwKik31HVUwpjPrlU0",
+    "temperature_prediction_comp": "11fWVhm5lTHt_yRjuPfxPl2taIE4SUmwX",
+    "wind_prediction": "1s9IMsDVOK09HI8vyGOCE8NOXu8kJ7oZG",
+    "wind_prediction_diff": "1aSqhHXAiz5Jk5_twwPY02l1NPMCG64Ne"
+  },
+  "model_2_mc_dropout": {
+    "temperature_uncertainty": "1XBgMGP2CP7KVjZqflLPM73DUYsLdd5Fv"
+  },
+  "model_3": {
+    "temperature_prediction": "17gLvbt7Bt6FdiozZXywmCRSeIh5H-7K9",
+    "temperature_prediction_comp": "1ptZQJ2LZQ7ofKW2kVAWIAq9nGCUlH6pr",
+    "wind_prediction": "1r9S-1KgiZE_a2SzQGOlkM9P9dv-1rYTo",
+    "wind_prediction_diff": "16MtV-wFBd4xw8bJxkKj3krKhKE4PN6oj"
+  }
+};
+        
+        // Initialize page on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Populate the dropdown with model options
+            const dropdown = document.getElementById('model-dropdown');
+            Object.keys(videoIdsData).forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = formatModelName(model);
+                dropdown.appendChild(option);
+            });
+            
+            // Generate HTML for each model section
+            generateModelSections(videoIdsData);
+            
+            // Remove loading message (if it exists)
+            const loadingEl = document.querySelector('.loading');
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+    
