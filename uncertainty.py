@@ -14,7 +14,7 @@ import sys
 
 # Import from the project modules
 from dataset import load_dataset, ERADataset
-from visualisation import load_checkpoint, get_animation_writer, denormalize_variable
+from video_gen import load_checkpoint, get_animation_writer, denormalize_variable
 
 # Enable anti-aliasing and set backend
 mpl.rcParams['text.antialiased'] = True
