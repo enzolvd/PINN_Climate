@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate-PINN: Documentation</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --muted-text: #aaaaaa;
+            --border-color: #333333;
+            --highlight: #3a506b;
+            --accent: #5b8a72;
+            --header-bg: #1a1a1a;
+            --dropdown-bg: #2a2a2a;
+            --code-bg: #2d2d2d;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--header-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .github-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--text-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            background-color: #24292e;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .github-link:hover {
+            background-color: #3a3f46;
+        }
+        
+        .github-link svg {
+            margin-right: 6px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        h1, h2, h3 {
+            color: var(--text-color);
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin: 0 15px;
+        }
+        
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: var(--highlight);
+        }
+        
+        .nav-links a.active {
+            background-color: var(--accent);
+            color: #fff;
+        }
+        
+        .docs-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+        }
+        
+        .toc {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .toc ul {
+            padding-left: 20px;
+            list-style-type: none;
+        }
+        
+        .toc a {
+            color: var(--text-color);
+            text-decoration: none;
+            display: block;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+        
+        .toc a:hover {
+            color: var(--accent);
+        }
+        
+        .toc .toc-h2 {
+            margin-left: 15px;
+        }
+        
+        .toc .toc-h3 {
+            margin-left: 30px;
+            font-size: 13px;
+            color: var(--muted-text);
+        }
+        
+        .content-area {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-block {
+            background-color: var(--code-bg);
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: 'Consolas', monospace;
+            color: #d4d4d4;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            scroll-margin-top: 20px;
+        }
+        
+        .alert {
+            background-color: rgba(91, 138, 114, 0.2);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--header-bg);
+        }
+        
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--muted-text);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .docs-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .github-link {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 20px auto;
+                display: inline-flex;
+            }
+            
+            .toc {
+                position: static;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="https://github.com/enzolvd/PINN_Climate" target="_blank" class="github-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+            <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.2-1.8-1.2-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.3 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.2 2.9.1 3.3.8.8 1.3 1.8 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1 .8 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"></path>
+        </svg>
+        GitHub Repository
+    </a>
+
+    <header>
+        <h1>Climate-PINN Documentation</h1>
+        <p>Comprehensive guide to using the Physics-Informed Neural Network for Climate Modeling</p>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="models.html">Model Details</a></li>
+            <li><a href="visualizations.html">Visualizations</a></li>
+            <li><a href="documentation.html" class="active">Documentation</a></li>
+        </ul>
+    </header>
+
+    <div class="docs-container">
+        <div class="toc">
+            <h3>Contents</h3>
+            <ul>
+                <li><a href="#installation" class="toc-h1">Installation</a></li>
+                <li><a href="#data-preparation" class="toc-h1">Data Preparation</a></li>
+                <li><a href="#dataset-module" class="toc-h1">Dataset Module</a>
+                    <ul>
+                        <li><a href="#era-dataset" class="toc-h2">ERADataset Class</a></li>
+                        <li><a href="#load-dataset" class="toc-h2">load_dataset Function</a></li>
+                    </ul>
+                </li>
+                <li><a href="#training" class="toc-h1">Training</a>
+                    <ul>
+                        <li><a href="#single-experiment" class="toc-h2">Single Experiment</a></li>
+                        <li><a href="#experiment-queue" class="toc-h2">Using Experiment Queue</a></li>
+                        <li><a href="#slurm-training" class="toc-h2">SLURM Training</a></li>
+                    </ul>
+                </li>
+                <li><a href="#visualizations" class="toc-h1">Visualization Tools</a>
+                    <ul>
+                        <li><a href="#video-generation" class="toc-h2">Video Generation</a></li>
+                        <li><a href="#static-images" class="toc-h2">Static Images</a></li>
+                        <li><a href="#uncertainty" class="toc-h2">Uncertainty Visualization</a></li>
+                    </ul>
+                </li>
+                <li><a href="#physics-constraints" class="toc-h1">Physics Constraints</a>
+                    <ul>
+                        <li><a href="#navier-stokes" class="toc-h2">Navier-Stokes Equations</a></li>
+                        <li><a href="#reynolds-number" class="toc-h2">Reynolds Number</a></li>
+                    </ul>
+                </li>
+                <li><a href="#hyperparameters" class="toc-h1">Hyperparameters</a></li>
+                <li><a href="#faq" class="toc-h1">FAQ</a></li>
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <section id="installation" class="section">
+                <h2>Installation</h2>
+                <p>Setting up the Climate-PINN environment requires Python 3.12 and several dependencies. Follow these steps to get started:</p>
+                
+                <div class="code-block">
+                    <pre><code># Clone the repository
+git clone https://github.com/enzolvd/PINN_Climate.git
+cd PINN_Climate
+
+# Create and activate a conda environment
+conda create -n climate_pinn python=3.12
+conda activate climate_pinn
+
+# Install dependencies
+pip install -r requirements.txt</code></pre>
+                </div>
+                
+                <div class="alert">
+                    <strong>Note:</strong> This project requires PyTorch with CUDA support for GPU acceleration. If you need to install a specific version of PyTorch compatible with your CUDA version, visit the <a href="https://pytorch.org/get-started/locally/" target="_blank" style="color: var(--accent);">PyTorch installation page</a>.
+                </div>
+            </section>
+
+            <section id="data-preparation" class="section">
+                <h2>Data Preparation</h2>
+                <p>The model expects ERA5 climate data in NetCDF format. You can download ERA5 data from the <a href="https://cds.climate.copernicus.eu/#!/home" target="_blank" style="color: var(--accent);">Copernicus Climate Data Store</a> or more easily from <a href="https://github.com/pangeo-data/WeatherBench" target="_blank" style="color: var(--accent);">WeatherBench</a>.</p>
+                
+                <p>Data should be organized in the following structure:</p>
+                <div class="code-block">
+                    <pre><code>data/
+└── era_5_data/
+    ├── constants/
+    │   └── constants.nc      # Contains orography, land-sea mask, and soil type
+    ├── geopotential_500/
+    ├── 2m_temperature/
+    ├── temperature_850/
+    ├── 10m_u_component_of_wind/
+    └── 10m_v_component_of_wind/</code></pre>
+                </div>
+                
+                <p>Each variable directory should contain yearly NetCDF files (e.g., <code>geopotential_500_1979_data.nc</code>).</p>
+            </section>
+
+            <section id="dataset-module" class="section">
+                <h2>Dataset Module</h2>
+                <p>The dataset module provides utilities for loading and preprocessing ERA5 data.</p>
+                
+                <div id="era-dataset" class="subsection">
+                    <h3>ERADataset Class</h3>
+                    <p>The <code>ERADataset</code> class handles loading and preprocessing ERA5 climate data:</p>
+                    
+                    <div class="code-block">
+                        <pre><code>from dataset import ERADataset
+
+# Create a dataset for specific years
+dataset = ERADataset(
+    root_dir="./data/era_5_data",
+    years=[1979, 1980, 1981],
+    normalize=True
+)
+
+# Access data from the dataset
+batch = dataset[0]
+inputs = batch['input']        # Shape: [channels, height, width]
+targets = batch['target']      # Shape: [channels, height, width]
+coords = batch['coords']       # List of [lon, lat, time]
+masks = batch['constant_masks'] # Constant masks (orography, land-sea, soil)</code></pre>
+                    </div>
+                    
+                    <p>The dataset automatically handles normalization and preparation of inputs and targets according to this mapping:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Variables</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Inputs</td>
+                                <td>Geopotential at 500 hPa, Temperature at 850 hPa</td>
+                            </tr>
+                            <tr>
+                                <td>Targets</td>
+                                <td>Temperature at 2m, 10m U wind component, 10m V wind component</td>
+                            </tr>
+                            <tr>
+                                <td>Constants</td>
+                                <td>Orography, Land-sea mask, Soil type</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="load-dataset" class="subsection">
+                    <h3>load_dataset Function</h3>
+                    <p>The <code>load_dataset</code> function provides a convenient way to create training and validation splits:</p>
+                    
+                    <div class="code-block">
+                        <pre><code>from dataset import load_dataset
+from torch.utils.data import DataLoader
+
+# Load dataset with train/validation split
+datasets = load_dataset(
+    nb_file=10,               # Number of years to use
+    train_val_split=0.8,      # 80% training, 20% validation
+    year0=1979,               # Starting year
+    root_dir="./data/era_5_data",
+    normalize=True
+)
+
+# Create data loaders
+train_loader = DataLoader(datasets['train'], batch_size=32, shuffle=True)
+val_loader = DataLoader(datasets['val'], batch_size=32, shuffle=False)</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="training" class="section">
+                <h2>Training</h2>
+                <p>The project supports several training workflows, from single experiments to distributed training on SLURM clusters.</p>
+                
+                <div id="single-experiment" class="subsection">
+                    <h3>Single Experiment</h3>
+                    <p>To train a single model, use the <code>train.py</code> script with appropriate parameters:</p>
+                    
+                    <div class="code-block">
+                        <pre><code>python train.py \
+    --model=model_2 \
+    --experiment_name=climate_run_1 \
+    --wandb_project=climate_pinn \
+    --hidden_dim=64 \
+    --initial_re=100.0 \
+    --nb_years=10 \
+    --train_val_split=0.8 \
+    --batch_size=128 \
+    --epochs=100 \
+    --learning_rate=1e-3 \
+    --physics_weight=0.5 \
+    --data_weight=1.0 \
+    --data_dir=./data/era_5_data</code></pre>
+                    </div>
+                    
+                    <p>The training process will be tracked using Weights & Biases, logging:</p>
+                    <ul>
+                        <li>Training and validation losses</li>
+                        <li>Physics constraint residuals</li>
+                        <li>Reynolds number evolution</li>
+                        <li>Prediction visualizations</li>
+                        <li>Model checkpoints</li>
+                    </ul>
+                </div>
+                
+                <div id="experiment-queue" class="subsection">
+                    <h3>Using the Experiment Queue</h3>
+                    <p>For running multiple experiments sequentially, the repository includes an experiment queue system:</p>
+                    
+                    <ol>
+                        <li>Edit <code>experiment_runner/experiments.json</code> to define your experiments</li>
+                        <li>Update the queue:</li>
+                    </ol>
+                    
+                    <div class="code-block">
+                        <pre><code>./experiment_runner/update_queue.sh</code></pre>
+                    </div>
+                    
+                    <ol start="3">
+                        <li>Start the queue runner:</li>
+                    </ol>
+                    
+                    <div class="code-block">
+                        <pre><code>./experiment_runner/run_queue.sh</code></pre>
+                    </div>
+                    
+                    <p>The queue system will sequentially run all experiments, handling checkpointing and logging automatically.</p>
+                </div>
+                
+                <div id="slurm-training" class="subsection">
+                    <h3>Distributed Training on SLURM</h3>
+                    <p>The repository includes configuration for training on SLURM clusters. The experiment queue system automatically submits jobs to available SLURM partitions.</p>
+                    
+                    <p>The SLURM configuration includes:</p>
+                    <ul>
+                        <li>Automatic detection of available partitions</li>
+                        <li>Job submission with appropriate resources</li>
+                        <li>Handling of job dependencies</li>
+                        <li>Automatic conda environment activation</li>
+                    </ul>
+                    
+                    <p>The default configuration in <code>experiment_runner/run_queue.sh</code> checks for available partitions in <code>ENSTA-l40s</code> and <code>ENSTA-h100</code>.</p>
+                </div>
+            </section>
+
+            <section id="visualizations" class="section">
+                <h2>Visualization Tools</h2>
+                <p>The repository includes comprehensive visualization tools for model predictions.</p>
+                
+                <div id="video-generation" class="subsection">
+                    <h3>Video Generation</h3>
+                    <p>To generate visualizations of model predictions:</p>
+                    
+                    <div class="code-block">
+                        <pre><code>python video_gen.py</code></pre>
+                    </div>
+                    
+                    <p>This will create visualizations for all runs, including:</p>
+                    <ul>
+                        <li>Temperature field predictions vs. ground truth</li>
+                        <li>Temperature prediction error maps</li>
+                        <li>Wind field predictions vs. ground truth</li>
+                        <li>Wind field prediction error maps</li>
+                    </ul>
+                    
+                    <p>You can customize the visualization by modifying parameters at the bottom of <code>video_gen.py</code>:</p>
+                    
+                    <div class="code-block">
+                        <pre><code>if __name__ == "__main__":
+    runs = ['run_1', 'run_3', 'run_4', 'run_8', 'run_9']
+    fps = 48
+    year = 2000
+    duration = 20
+
+    for run in tqdm(runs):
+        visualize_predictions(run, year, fps=fps, duration=duration)</code></pre>
+                    </div>
+                </div>
+                
+                <div id="static-images" class="subsection">
+                    <h3>Static Image Generation</h3>
+                    <p>For static comparison images at specific timesteps, use <code>image_gen.py</code>:</p>
+                    
+                    <div class="code-block">
+                        <pre><code>python image_gen.py</code></pre>
+                    </div>
+                    
+                    <p>This script generates PDF files showing side-by-side comparisons of temperature and wind predictions vs. ground truth at specified timesteps.</p>
+                </div>
+                
+                <div id="uncertainty" class="subsection">
+                    <h3>Uncertainty Visualization with MC Dropout</h3>
+                    <p>For models with dropout (e.g., model_2), you can visualize prediction uncertainty using Monte Carlo dropout:</p>
+                    
+                    <div class="code-block">
+                        <pre><code>python uncertainty.py run_8 2000 30</code></pre>
+                    </div>
+                    
+                    <p>Arguments:</p>
+                    <ol>
+                        <li>Run name (e.g., run_8)</li>
+                        <li>Year to analyze (e.g., 2000)</li>
+                        <li>Number of MC samples (e.g., 30)</li>
+                    </ol>
+                    
+                    <p>This generates uncertainty visualizations including:</p>
+                    <ul>
+                        <li>Static uncertainty maps at specific timesteps</li>
+                        <li>Animated visualizations of mean predictions with confidence intervals</li>
+                        <li>Spatially-resolved uncertainty maps</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="physics-constraints" class="section">
+                <h2>Physics Constraints</h2>
+                <p>The PINN is constrained by fluid dynamics principles from the Navier-Stokes equations.</p>
+                
+                <div id="navier-stokes" class="subsection">
+                    <h3>Navier-Stokes Equations</h3>
+                    <p>The model incorporates three key equations:</p>
+                    
+                    <ol>
+                        <li><strong>Continuity Equation:</strong> Ensures conservation of mass
+                            <div class="code-block">
+                                <pre><code>e1 = u_x + u_y  # Continuity equation</code></pre>
+                            </div>
+                        </li>
+                        <li><strong>Momentum Equations:</strong> Govern the conservation of momentum in x and y directions
+                            <div class="code-block">
+                                <pre><code>e2 = u_t + (u_pred * u_x + v_pred * u_y) - (1/Re) * (u_xx + u_yy)  # x-momentum
+e3 = v_t + (u_pred * v_x + v_pred * v_y) - (1/Re) * (v_xx + v_yy)  # y-momentum</code></pre>
+                            </div>
+                        </li>
+                    </ol>
+                    
+                    <p>These physics constraints are incorporated into the loss function using MSE loss:</p>
+                    <div class="code-block">
+                        <pre><code>physics_loss = {
+    'e1': self.MSE(e1, torch.zeros_like(e1)), 
+    'e2': self.MSE(e2, torch.zeros_like(e2)), 
+    'e3': self.MSE(e3, torch.zeros_like(e3))
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div id="reynolds-number" class="subsection">
+                    <h3>Reynolds Number</h3>
+                    <p>The Reynolds number is a dimensionless quantity that represents the ratio of inertial forces to viscous forces within a fluid. In the PINN models, it is treated as a learnable parameter.</p>
+                    
+                    <p>Different model variants handle the Reynolds number differently:</p>
+                    <ul>
+                        <li><strong>model_0:</strong> Basic implementation with unconstrained Reynolds number</li>
+                        <li><strong>model_0_Re:</strong> Introduces clamping and momentum-based smoothing</li>
+                        <li><strong>model_3:</strong> Uses a neural network to predict spatially-varying Reynolds numbers</li>
+                    </ul>
+                    
+                    <p>Example implementation from model_2:</p>
+                    <div class="code-block">
+                        <pre><code>def get_reynolds_number(self):
+    clamped_log_re = torch.clamp(self.log_re, 
+                                min=torch.log(torch.tensor(50.0, device=self.device)), 
+                                max=torch.log(torch.tensor(1e5, device=self.device)))
+    current_re = torch.exp(clamped_log_re)
+    
+    if self.previous_re is None:
+        self.previous_re = current_re
+    
+    smoothed_re = self.re_momentum * self.previous_re + (1 - self.re_momentum) * current_re
+    self.previous_re = smoothed_re.detach()
+    
+    return smoothed_re</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="hyperparameters" class="section">
+                <h2>Hyperparameters</h2>
+                <p>Key hyperparameters for model training:</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                            <th>Default</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>model</td>
+                            <td>Model variant to use</td>
+                            <td>Required</td>
+                        </tr>
+                        <tr>
+                            <td>hidden_dim</td>
+                            <td>Dimension of hidden layers</td>
+                            <td>64</td>
+                        </tr>
+                        <tr>
+                            <td>initial_re</td>
+                            <td>Initial Reynolds number</td>
+                            <td>100.0</td>
+                        </tr>
+                        <tr>
+                            <td>physics_weight</td>
+                            <td>Weight of physics loss terms</td>
+                            <td>0.5</td>
+                        </tr>
+                        <tr>
+                            <td>data_weight</td>
+                            <td>Weight of data loss terms</td>
+                            <td>1.0</td>
+                        </tr>
+                        <tr>
+                            <td>batch_size</td>
+                            <td>Training batch size</td>
+                            <td>128</td>
+                        </tr>
+                        <tr>
+                            <td>learning_rate</td>
+                            <td>Initial learning rate</td>
+                            <td>1e-3</td>
+                        </tr>
+                        <tr>
+                            <td>nb_years</td>
+                            <td>Number of years to use for training</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td>train_val_split</td>
+                            <td>Ratio for training/validation split</td>
+                            <td>0.8</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p>Recommended parameter combinations for different model variants:</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>hidden_dim</th>
+                            <th>physics_weight</th>
+                            <th>learning_rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>model_0</td>
+                            <td>64</td>
+                            <td>1.0</td>
+                            <td>1e-3</td>
+                        </tr>
+                        <tr>
+                            <td>model_0_Re</td>
+                            <td>64</td>
+                            <td>1.0</td>
+                            <td>1e-3</td>
+                        </tr>
+                        <tr>
+                            <td>model_2</td>
+                            <td>64</td>
+                            <td>0.5</td>
+                            <td>1e-3</td>
+                        </tr>
+                        <tr>
+                            <td>model_3</td>
+                            <td>64</td>
+                            <td>1.0</td>
+                            <td>1e-3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="faq" class="section">
+                <h2>Frequently Asked Questions</h2>
+                
+                <div class="faq-item">
+                    <h3>How do I get the pre-trained model weights?</h3>
+                    <p>Pre-trained model weights are available on Hugging Face. You can download them using:</p>
+                    <div class="code-block">
+                        <pre><code># Using git lfs
+git lfs install
+git clone https://huggingface.co/enzolouv/PINN_Climate
+
+# Or download directly from the web interface
+# https://huggingface.co/enzolouv/PINN_Climate</code></pre>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <h3>What's the difference between model variants?</h3>
+                    <p>The repository includes several model variants with different architectures:</p>
+                    <ul>
+                        <li><strong>model_0:</strong> Original baseline model</li>
+                        <li><strong>model_0_Re:</strong> Enhanced with clipped gradient and momentum on the Reynolds number</li>
+                        <li><strong>model_1:</strong> Model with modified dropout placement (suboptimal)</li>
+                        <li><strong>model_2:</strong> Model with correctly placed dropout and improved Reynolds number handling</li>
+                        <li><strong>model_3:</strong> Advanced model with a neural network for Reynolds number estimation</li>
+                    </ul>
+                    <p>For most applications, model_2 or model_3 are recommended as they provide the best performance.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3>How do I generate custom visualizations?</h3>
+                    <p>You can customize the visualization scripts to generate visualizations for specific models, years, or parameters:</p>
+                    <div class="code-block">
+                        <pre><code># For video generation
+python video_gen.py
+
+# For static images
+python image_gen.py
+
+# For uncertainty visualization
+python uncertainty.py run_name year num_samples</code></pre>
+                    </div>
+                    <p>Edit the parameters at the bottom of each script to customize the output.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3>How do physics constraints work in the model?</h3>
+                    <p>Physics constraints are incorporated into the loss function by computing residuals of fluid dynamics equations. The model is trained to minimize both data-driven loss (MSE between predictions and true values) and physics-based loss (residuals of Navier-Stokes equations). This ensures that predictions respect physical laws.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3>How can I run experiments on a cluster?</h3>
+                    <p>The repository includes scripts for running experiments on SLURM clusters. Edit <code>experiment_runner/experiments.json</code> to define experiments, then use:</p>
+                    <div class="code-block">
+                        <pre><code>./experiment_runner/update_queue.sh
+./experiment_runner/run_queue.sh</code></pre>
+                    </div>
+                    <p>These scripts will submit jobs to available SLURM partitions and manage the experiment queue.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3>What are the hardware requirements?</h3>
+                    <p>For training:</p>
+                    <ul>
+                        <li>GPU with at least 8GB VRAM (16GB+ recommended)</li>
+                        <li>16GB+ system RAM</li>
+                        <li>Storage space for ERA5 data (varies based on years used, ~2GB per year)</li>
+                    </ul>
+                    <p>For inference and visualization, lower specs may be sufficient.</p>
+                </div>
+            </section>
+
+            <section id="acknowledgements" class="section">
+                <h2>Acknowledgments</h2>
+                <p>This project builds upon several key resources:</p>
+                <ul>
+                    <li><a href="https://cds.climate.copernicus.eu/datasets/reanalysis-era5-pressure-levels?tab=overview" target="_blank" style="color: var(--accent);">ERA5</a> data provided by ECMWF</li>
+                    <li>Physics-informed neural networks methodology adapted from <a href="https://www.sciencedirect.com/science/article/pii/S0021999118307125" target="_blank" style="color: var(--accent);">Raissi et al. (2019)</a></li>
+                    <li>Navier-Stokes equations for PINNs in climate modeling: <a href="https://open-research-europe.ec.europa.eu/articles/4-99" target="_blank" style="color: var(--accent);">Physics-informed neural networks for high-resolution weather reconstruction from sparse weather stations</a></li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <footer>
+        <p>Climate-PINN Documentation - © 2025 Enzo Louvard - MIT License</p>
+    </footer>
+
+    <script>
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('.toc a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Highlight current section in TOC based on scroll position
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.section');
+            let currentSection = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 100)) {
+                    currentSection = section.getAttribute('id');
+                }
+            });
+            
+            document.querySelectorAll('.toc a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${currentSection}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

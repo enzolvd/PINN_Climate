@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Model Visualizations</title>
+    <title>Climate-PINN: Physics-Informed Neural Networks for Climate Modeling</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -27,95 +27,203 @@
             line-height: 1.6;
         }
         
-        header {
+        header.main-header {
             text-align: center;
             margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 60px 20px;
             background-color: var(--header-bg);
-            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        header.main-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        header.main-header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            color: var(--muted-text);
+        }
+        
+        .github-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--text-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            background-color: #24292e;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .github-link:hover {
+            background-color: #3a3f46;
+        }
+        
+        .github-link svg {
+            margin-right: 6px;
+            width: 20px;
+            height: 20px;
         }
         
         h1, h2, h3 {
             color: var(--text-color);
         }
         
-        .model-selector {
-            margin: 30px 0;
-            text-align: center;
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 0;
+            list-style: none;
         }
         
-        .model-selector select {
-            padding: 12px 16px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: var(--dropdown-bg);
+        .nav-links li {
+            margin: 0 15px;
+        }
+        
+        .nav-links a {
             color: var(--text-color);
-            width: 300px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
         
-        .model-selector select:hover {
-            border-color: var(--accent);
+        .nav-links a:hover {
+            background-color: var(--highlight);
         }
         
-        .model-selector select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(91, 138, 114, 0.3);
+        .nav-links a.active {
+            background-color: var(--accent);
+            color: #fff;
         }
         
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-gap: 30px;
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
             margin-top: 30px;
         }
         
-        .video-container {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
+        .btn {
+            padding: 12px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn.primary {
+            background-color: var(--accent);
+            color: #fff;
+        }
+        
+        .btn.primary:hover {
+            background-color: #4a7360;
+            transform: translateY(-2px);
+        }
+        
+        .btn.secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        .section {
             background-color: var(--card-bg);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 40px;
+            margin-bottom: 30px;
+            border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
-        .video-container:hover {
+        .section h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--accent);
+        }
+        
+        .section p {
+            margin-bottom: 20px;
+        }
+        
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .feature-card {
+            background-color: var(--header-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
         }
         
-        .video-container h3 {
+        .feature-card h3 {
             color: var(--accent);
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
         }
         
-        iframe {
-            width: 100%;
-            height: 350px;
-            border: none;
-            border-radius: 4px;
+        .code-block {
+            background-color: #2d2d2d;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
         }
         
-        .model-section {
-            display: none;
-            animation: fadeIn 0.5s ease;
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: 'Consolas', monospace;
+            color: #d4d4d4;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
         }
         
-        .active {
-            display: block;
+        .model-image {
+            text-align: center;
+        }
+        
+        .model-image img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         footer {
@@ -127,173 +235,177 @@
             color: var(--muted-text);
         }
         
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 18px;
-            color: var(--muted-text);
-        }
-        
-        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .video-grid {
+            .overview-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .github-link {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 20px auto;
+                display: inline-flex;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+            }
+            
+            .nav-links li {
+                margin: 5px;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Climate Model Visualizations</h1>
-        <p>Select a model from the dropdown to view its visualizations</p>
+    <a href="https://github.com/enzolvd/PINN_Climate" target="_blank" class="github-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+            <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.2-1.8-1.2-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.3 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.2 2.9.1 3.3.8.8 1.3 1.8 1.3 3.1 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1 .8 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3"></path>
+        </svg>
+        GitHub Repository
+    </a>
+
+    <header class="main-header">
+        <h1>Climate-PINN</h1>
+        <p>Physics-Informed Neural Networks for Climate Modeling</p>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="models.html">Model Details</a></li>
+            <li><a href="visualizations.html">Visualizations</a></li>
+            <li><a href="documentation.html">Documentation</a></li>
+        </ul>
+        <div class="buttons">
+            <a href="visualizations.html" class="btn primary">View Visualizations</a>
+            <a href="documentation.html" class="btn secondary">Documentation</a>
+        </div>
     </header>
 
-    <div class="model-selector">
-        <select id="model-dropdown" onchange="showModel(this.value)">
-            <option value="">-- Select a Model --</option>
-        </select>
+    <div class="section">
+        <h2>Project Overview</h2>
+        <div class="overview-grid">
+            <div>
+                <p>This repository implements a Physics-Informed Neural Network (PINN) approach to climate modeling, combining deep learning with physical constraints from fluid dynamics. The model is trained on ERA5 climate reanalysis data and predicts near-surface temperature and wind patterns while respecting fundamental physics principles derived from the Navier-Stokes equations.</p>
+                
+                <p>By incorporating physics-based constraints, the model maintains physical consistency while delivering accurate predictions, even in complex climate scenarios.</p>
+                
+                <div class="badges">
+                    <a href="https://opensource.org/licenses/MIT" target="_blank">
+                        <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT">
+                    </a>
+                    <a href="https://github.com/pangeo-data/WeatherBench" target="_blank">
+                        <img src="https://img.shields.io/badge/Data-WeatherBench-darkgreen" alt="Data: WeatherBench">
+                    </a>
+                    <a href="https://huggingface.co/enzolouv/PINN_Climate" target="_blank">
+                        <img src="https://img.shields.io/badge/Weights-HF-red" alt="Weights: HF">
+                    </a>
+                </div>
+            </div>
+            <div class="model-image">
+                <img src="images/model_diagram.png" alt="Climate-PINN Model Structure" onerror="this.src='https://via.placeholder.com/500x300?text=Climate-PINN+Model'">
+            </div>
+        </div>
     </div>
 
-    <div id="content-container">
-        <div class="loading">Loading model data...</div>
+    <div class="section">
+        <h2>Key Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Physics-Informed Architecture</h3>
+                <p>Neural network incorporating Navier-Stokes equations as physics constraints to ensure physically consistent predictions that respect fluid dynamics principles.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Multiple Model Variants</h3>
+                <p>Several model architectures with progressive improvements, from basic implementation to advanced neural network-based Reynolds number estimation.</p>
+            </div>
+            <div class="feature-card">
+                <h3>ERA5 Dataset Integration</h3>
+                <p>Training on comprehensive climate reanalysis data with multiple variables including geopotential, temperature, wind patterns, and geographical constraints.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Advanced Visualization Tools</h3>
+                <p>Generate animated temperature and wind field maps with prediction analysis, error visualization, and uncertainty quantification.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Model Architecture</h2>
+        <p>The Climate-PINN consists of several key components:</p>
+        <ul>
+            <li><strong>MeteoEncoder:</strong> Processes meteorological input variables (geopotential and temperature)</li>
+            <li><strong>MaskEncoder:</strong> Handles geographical masks (orography, land-sea mask, soil type)</li>
+            <li><strong>CoordProcessor:</strong> Processes spatial (lat/lon) and temporal coordinates</li>
+            <li><strong>Physics Constraints:</strong> Incorporates Navier-Stokes equations with learnable Reynolds number</li>
+        </ul>
+        
+        <p>The repository includes several model variants with progressive improvements:</p>
+        <ul>
+            <li><strong>model_0:</strong> Original baseline model</li>
+            <li><strong>model_0_Re:</strong> Enhanced with clipped gradient and momentum on the Reynolds number</li>
+            <li><strong>model_1:</strong> Model with modified dropout placement</li>
+            <li><strong>model_2:</strong> Model with correctly placed dropout and improved Reynolds number handling</li>
+            <li><strong>model_3:</strong> Advanced model with a neural network for Reynolds number estimation</li>
+        </ul>
+        
+        <a href="models.html" class="btn secondary" style="display: inline-block; margin-top: 20px;">Learn more about model variants</a>
+    </div>
+
+    <div class="section">
+        <h2>Getting Started</h2>
+        <h3>Installation</h3>
+        <div class="code-block">
+            <pre><code>git clone https://github.com/enzolvd/PINN_Climate.git
+cd PINN_Climate
+conda create -n climate_pinn python=3.12
+conda activate climate_pinn
+pip install -r requirements.txt</code></pre>
+        </div>
+
+        <h3>Training a Model</h3>
+        <div class="code-block">
+            <pre><code>python train.py \
+    --model=model_2 \
+    --experiment_name=climate_run_1 \
+    --hidden_dim=64 \
+    --initial_re=100.0 \
+    --nb_years=10 \
+    --train_val_split=0.8 \
+    --physics_weight=0.5 \
+    --data_weight=1.0</code></pre>
+        </div>
+        
+        <h3>Generating Visualizations</h3>
+        <div class="code-block">
+            <pre><code>python video_gen.py   # For animated visualizations
+python image_gen.py   # For static comparison images</code></pre>
+        </div>
+        
+        <a href="documentation.html" class="btn secondary" style="display: inline-block; margin-top: 20px;">View full documentation</a>
+    </div>
+
+    <div class="section">
+        <h2>Citation</h2>
+        <p>If you use this code in your research, please cite:</p>
+        <div class="code-block">
+            <pre><code>@misc{louvard2025climatepinn,
+  author = {Louvard, Enzo},
+  title = {Climate-PINN: Physics-Informed Neural Networks for Climate Modeling},
+  year = {2025},
+  publisher = {GitHub},
+  journal = {GitHub Repository},
+  howpublished = {\url{https://github.com/enzolvd/PINN_Climate}}
+}</code></pre>
+        </div>
     </div>
 
     <footer>
-        <p>Climate Model Visualization - © 2025</p>
+        <p>Climate-PINN - © 2025 Enzo Louvard - MIT License</p>
     </footer>
-
-    <script>
-        // Function to format model name for display
-        function formatModelName(modelId) {
-            return modelId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        }
-        
-        // Function to generate HTML for model sections
-        function generateModelSections(data) {
-            const container = document.getElementById('content-container');
-            container.innerHTML = ''; // Clear the loading message
-            
-            // Define video types display names
-            const videoTypeNames = {
-                'temperature_prediction': 'Temperature Prediction',
-                'temperature_prediction_comp': 'Temperature Comparison',
-                'wind_prediction': 'Wind Prediction',
-                'wind_prediction_diff': 'Wind Difference',
-                'temperature_uncertainty': 'Temperature Uncertainty'
-            };
-            
-            Object.entries(data).forEach(([model, videos]) => {
-                // Create model section
-                const section = document.createElement('div');
-                section.id = model;
-                section.className = 'model-section';
-                
-                // Add heading
-                const heading = document.createElement('h2');
-                heading.textContent = formatModelName(model) + ' Visualizations';
-                section.appendChild(heading);
-                
-                // Create video grid
-                const grid = document.createElement('div');
-                grid.className = 'video-grid';
-                
-                // Add videos
-                Object.entries(videos).forEach(([videoType, fileId]) => {
-                    const videoContainer = document.createElement('div');
-                    videoContainer.className = 'video-container';
-                    
-                    const videoHeading = document.createElement('h3');
-                    videoHeading.textContent = videoTypeNames[videoType] || videoType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    videoContainer.appendChild(videoHeading);
-                    
-                    const iframe = document.createElement('iframe');
-                    iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
-                    iframe.setAttribute('allowfullscreen', '');
-                    videoContainer.appendChild(iframe);
-                    
-                    grid.appendChild(videoContainer);
-                });
-                
-                section.appendChild(grid);
-                container.appendChild(section);
-            });
-        }
-        
-        // Function to show the selected model and hide others
-        function showModel(modelId) {
-            // Hide all model sections
-            const modelSections = document.querySelectorAll('.model-section');
-            modelSections.forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // Show the selected model
-            if (modelId) {
-                const selectedModel = document.getElementById(modelId);
-                if (selectedModel) {
-                    selectedModel.classList.add('active');
-                }
-            }
-        }
-        
-        // Pre-loaded model data
-        const videoIdsData = {
-  "model_0": {
-    "temperature_prediction": "18VAEvIkUImFxnM6yKVw7nrNptOrzp57M",
-    "temperature_prediction_comp": "1L_2dk8UeW0nNkhRvZmDw5y2wI71LAive",
-    "wind_prediction": "1t9swSAnXjLrYDsJpZtiTeix4qH2QrSFT",
-    "wind_prediction_diff": "1de5pKDH6-3DONaR7O0-RgVBVx1U9oKy_"
-  },
-  "model_0_Re": {
-    "temperature_prediction": "1XlaDNbNisN4N0Bc2g-Dy9nSGTl2MX0zD",
-    "temperature_prediction_comp": "149vHacbh8REmEuF36FnsDO06iWk8tIEe",
-    "wind_prediction": "1fAdIZjx7NDxw-7FIoAKpJUr-Rioo1RwW",
-    "wind_prediction_diff": "1fhI0TrGyMxx0F-ATBP4hxeZOJtaWhsvH"
-  },
-  "model_1": {
-    "temperature_prediction": "1m9WXvAC6adNgQaXqiI8mgVGXLTscEVoM",
-    "temperature_prediction_comp": "10kjTdkvdjW0DbqGkza84lqdr9Y_Sb4ty",
-    "wind_prediction": "1G125gBYJ5vKAiIzssmK9ebVIhxv0t0XM",
-    "wind_prediction_diff": "1VFUlhfR2m2HMKalpqbvPa6J9wPhn0T7o"
-  },
-  "model_2": {
-    "temperature_prediction": "1ykd43WCOIEP14KvwKik31HVUwpjPrlU0",
-    "temperature_prediction_comp": "11fWVhm5lTHt_yRjuPfxPl2taIE4SUmwX",
-    "wind_prediction": "1s9IMsDVOK09HI8vyGOCE8NOXu8kJ7oZG",
-    "wind_prediction_diff": "1aSqhHXAiz5Jk5_twwPY02l1NPMCG64Ne"
-  },
-  "model_2_mc_dropout": {
-    "temperature_uncertainty": "1XBgMGP2CP7KVjZqflLPM73DUYsLdd5Fv"
-  },
-  "model_3": {
-    "temperature_prediction": "17gLvbt7Bt6FdiozZXywmCRSeIh5H-7K9",
-    "temperature_prediction_comp": "1ptZQJ2LZQ7ofKW2kVAWIAq9nGCUlH6pr",
-    "wind_prediction": "1r9S-1KgiZE_a2SzQGOlkM9P9dv-1rYTo",
-    "wind_prediction_diff": "16MtV-wFBd4xw8bJxkKj3krKhKE4PN6oj"
-  }
-};
-        
-        // Initialize page on load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Populate the dropdown with model options
-            const dropdown = document.getElementById('model-dropdown');
-            Object.keys(videoIdsData).forEach(model => {
-                const option = document.createElement('option');
-                option.value = model;
-                option.textContent = formatModelName(model);
-                dropdown.appendChild(option);
-            });
-            
-            // Generate HTML for each model section
-            generateModelSections(videoIdsData);
-            
-            // Remove loading message (if it exists)
-            const loadingEl = document.querySelector('.loading');
-            if (loadingEl) {
-                loadingEl.style.display = 'none';
-            }
-        });
-    </script>
 </body>
 </html>
-    
