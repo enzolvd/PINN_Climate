@@ -437,7 +437,7 @@ val_loader = DataLoader(datasets['val'], batch_size=32, shuffle=False)</code></p
                     </ul>
                 </div>
                 
-                <div id="experiment-queue" class="subsection">
+                <!-- <div id="experiment-queue" class="subsection">
                     <h3>Using the Experiment Queue</h3>
                     <p>For running multiple experiments sequentially, the repository includes an experiment queue system:</p>
                     
@@ -474,7 +474,7 @@ val_loader = DataLoader(datasets['val'], batch_size=32, shuffle=False)</code></p
                     </ul>
                     
                     <p>The default configuration in <code>experiment_runner/run_queue.sh</code> checks for available partitions in <code>ENSTA-l40s</code> and <code>ENSTA-h100</code>.</p>
-                </div>
+                </div> -->
             </section>
 
             <section id="visualizations" class="section">
@@ -759,7 +759,7 @@ python uncertainty.py run_name year num_samples</code></pre>
                     <p>Physics constraints are incorporated into the loss function by computing residuals of fluid dynamics equations. The model is trained to minimize both data-driven loss (MSE between predictions and true values) and physics-based loss (residuals of Navier-Stokes equations). This ensures that predictions respect physical laws.</p>
                 </div>
                 
-                <div class="faq-item">
+                <!-- <div class="faq-item">
                     <h3>How can I run experiments on a cluster?</h3>
                     <p>The repository includes scripts for running experiments on SLURM clusters. Edit <code>experiment_runner/experiments.json</code> to define experiments, then use:</p>
                     <div class="code-block">
@@ -767,9 +767,9 @@ python uncertainty.py run_name year num_samples</code></pre>
 ./experiment_runner/run_queue.sh</code></pre>
                     </div>
                     <p>These scripts will submit jobs to available SLURM partitions and manage the experiment queue.</p>
-                </div>
+                </div> -->
                 
-                <div class="faq-item">
+                <!-- <div class="faq-item">
                     <h3>What are the hardware requirements?</h3>
                     <p>For training:</p>
                     <ul>
@@ -778,7 +778,7 @@ python uncertainty.py run_name year num_samples</code></pre>
                         <li>Storage space for ERA5 data (varies based on years used, ~2GB per year)</li>
                     </ul>
                     <p>For inference and visualization, lower specs may be sufficient.</p>
-                </div>
+                </div> -->
             </section>
 
             <section id="acknowledgements" class="section">
