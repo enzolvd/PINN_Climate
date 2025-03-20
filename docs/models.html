@@ -389,53 +389,6 @@
                 font-size: 14px;
             }
         }
-                /* Chart Controls Styling */
-        .chart-controls {
-            margin-top: 10px;
-            padding: 15px;
-            background-color: var(--header-bg);
-            border-radius: 8px;
-            color: var(--text-color);
-        }
-
-        .chart-legend {
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .chart-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .smoothing-control {
-            display: flex;
-            align-items: center;
-            margin-right: 20px;
-        }
-
-        .smoothing-control label {
-            margin-right: 10px;
-        }
-
-        input[type="range"] {
-            background-color: var(--border-color);
-            border-radius: 5px;
-            height: 6px;
-            width: 150px;
-        }
-
-        .scale-toggle {
-            display: flex;
-            align-items: center;
-        }
-
-        .chart-tooltip {
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            line-height: 1.4;
-        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <script type="text/x-mathjax-config">
@@ -871,23 +824,8 @@
 
         <div class="performance-charts">
             <div class="chart">
-                <div id="mse-chart-container" style="width:100%; height:400px;"></div>
-                <div class="chart-controls">
-                    <div class="chart-legend"></div>
-                    <div class="chart-options">
-                        <div class="smoothing-control">
-                            <label for="smoothing-slider">Smoothing: <span id="smoothing-value">0.5</span></label>
-                            <input type="range" id="smoothing-slider" min="0" max="0.99" step="0.01" value="0.5">
-                        </div>
-                        <div class="scale-toggle">
-                            <label>
-                                <input type="checkbox" id="log-scale-toggle" checked>
-                                Log Scale
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <p class="caption">Interactive MSE loss comparison across models</p>
+                <img src="images/mse_chart.png" alt="MSE Performance Chart" onerror="this.src='https://via.placeholder.com/400x300?text=MSE+Performance+Chart'">
+                <p class="caption">MSE comparison across models</p>
             </div>
             <div class="chart">
                 <img src="images/physics_loss_chart.png" alt="Physics Loss Chart" onerror="this.src='https://via.placeholder.com/400x300?text=Physics+Loss+Chart'">
@@ -902,7 +840,7 @@
         <h2>Pretrained Model Weights</h2>
         <p>Pretrained weights for all model variants are available on Hugging Face:</p>
         <div class="weights-download">
-            <a href="https://huggingface.co/enzolouv/PINN_Climate" target="_blank" class="btn primary" style="display: inline-block; background-color: var(--accent); color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            <a href="https://huggingface.co/enzolouv/PINN_Climate" target="_blank" class="btn primary" style="display: inline-block;">
                 Download Model Weights
             </a>
         </div>
@@ -913,8 +851,35 @@
         <p>Climate-PINN - © 2025 Enzo Louvard - MIT License</p>
     </footer>
 
-<!-- D3.js for interactive charts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-    <script src="./js/script.js"></script>
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    // Get the target tab
+                    const tabId = this.getAttribute('data-tab');
+
+                    // Hide all tab panes
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active');
+                    });
+
+                    // Show the target tab pane
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
 </body>
 </html>
