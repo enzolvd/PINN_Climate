@@ -17,6 +17,7 @@ outputs/
 link_to_json.py
 video_links.txt
 experiment_runner/
+graph_loss/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
