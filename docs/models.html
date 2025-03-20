@@ -824,7 +824,7 @@
 
         <div class="performance-charts">
             <div class="chart">
-                <img src="images/mse_chart.png" alt="MSE Performance Chart" onerror="this.src='https://via.placeholder.com/400x300?text=MSE+Performance+Chart'">
+                <div id="mse-chart-container" style="width: 100%; height: 400px;"></div>
                 <p class="caption">MSE comparison across models</p>
             </div>
             <div class="chart">
@@ -881,5 +881,6 @@
             });
         });
     </script>
+    <script src="js/wandb-style.js"></script>
 </body>
 </html>
