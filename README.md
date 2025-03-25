@@ -4,9 +4,11 @@
   
 # Climate-PINN: Physics-Informed Neural Networks for Climate Modeling
 
-This repository implements a Physics-Informed Neural Network (PINN) approach to climate modeling, combining deep learning with physical constraints from fluid dynamics. The model is trained on ERA5 climate reanalysis data and predicts near-surface temperature and wind patterns while respecting fundamental physics principles derived from the Navier-Stokes equations.
+Please visit [here](https://enzolvd.github.io/PINN_Climate/) for visualisations, model details,... <br/>
+This repository implements a Physics-Informed Neural Network (PINN) approach to climate modeling, combining deep learning with physical constraints from fluid dynamics. The model is trained on ERA5 climate reanalysis data and predicts near-surface temperature and wind patterns while respecting fundamental physics principles derived from the Navier-Stokes equations. 
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Data](https://img.shields.io/badge/Data-WeatherBench-darkgreen)](https://github.com/pangeo-data/WeatherBench) [![Weights](https://img.shields.io/badge/Weights-HF-red)](https://huggingface.co/enzolouv/PINN_Climate) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Data](https://img.shields.io/badge/Data-WeatherBench-darkgreen)](https://github.com/pangeo-data/WeatherBench) [![Weights](https://img.shields.io/badge/Weights-HF-red)](https://huggingface.co/enzolouv/PINN_Climate) [![IO](https://img.shields.io/badge/IO-HF-orange)]([https://huggingface.co/enzolouv/PINN_Climate](https://enzolvd.github.io/PINN_Climate/)) 
+
 
 ## Features
 
